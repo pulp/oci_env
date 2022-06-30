@@ -1,0 +1,51 @@
+---
+version: "3.7"
+
+services:
+  _base:
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
+    image: "localhost/oci_env/pulp:base${DEV_IMAGE_SUFFIX:-}"
+    entrypoint: "/bin/true"
+    tmpfs:
+      - "/var/lib/pulp/artifact"
+      - "/var/lib/pulp/scripts"
+      - "/var/lib/pulp/tmp"
+      - "/tmp/ansible"
+
+  pulp:
+    image: "localhost/oci_env/pulp:base${DEV_IMAGE_SUFFIX:-}"
+    tmpfs:
+      - "/var/lib/pulp/artifact"
+      - "/var/lib/pulp/scripts"
+      - "/var/lib/pulp/tmp"
+      - "/tmp/ansible"
+    env_file:
+      - "${COMPOSE_CONTEXT}/.combined.env"
+      - "${COMPOSE_CONTEXT}/.compose.env"
+    environment:
+      - "DEV_SOURCE_PATH=${DEV_SOURCE_PATH}"
+      - "WITH_DEV_INSTALL=${WITH_DEV_INSTALL}"
+      - "LOCK_REQUIREMENTS=${LOCK_REQUIREMENTS}"
+      - "COMPOSE_PROFILE=${COMPOSE_PROFILE}"
+      - "ENABLE_SIGNING=${ENABLE_SIGNING}"
+      - "DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}"
+      - "DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}"
+    ports:
+      - "5001:80"
+    depends_on:
+      - _base
+    volumes:
+      - "${COMPOSE_CONTEXT}/..:/src:z"
+      - "pulp:/var/lib/pulp"
+      - "redis_data:/data"
+      - "pg_data:/var/lib/pgsql"
+
+volumes:
+  pulp:
+    name: pulp${DEV_VOLUME_SUFFIX:-}
+  pg_data:
+    name: pg_data${DEV_VOLUME_SUFFIX:-}
+  redis_data:
+    name: redis_data${DEV_VOLUME_SUFFIX:-}

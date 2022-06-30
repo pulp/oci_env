@@ -1,0 +1,7 @@
+#!/usr/bin/execlineb -P
+
+with-contenv
+
+foreground {
+    bash /utils.sh create_super_user
+}

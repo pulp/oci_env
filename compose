@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -o nounset
+set -o errexit
+
+# the internal mechanisms for installing and testing do not
+# work if the checkout path is not named "galaxy_ng", so
+# this script should -always- abort if that is not the case.
+# CWD=$(basename $(pwd))
+# if [[ "${CWD}" != "galaxy_ng" ]]; then
+#     cat >&2 <<EOF
+# ERROR: The checkout directory -must- be named galaxy_ng. A different
+#        name can cause many unintended behaviors inside the containers
+# EOF
+#     exit 1
+# fi
+
+if [[ -f '.compose.env' ]]; then
+  # export variables from .compose.env but only if the var is not already set.
+  eval "$(grep -v '^#' .compose.env | sed -E 's|^(.+)=(.*)$|export \1=${\1:-\2}|g' | xargs -L 1)"
+fi
+
+# if [[ -z "${COMPOSE_PROFILE:-}" ]]; then
+#   cat >&2 <<EOF
+# ERROR: The \$COMPOSE_PROFILE environment variable MUST be set.
+#        The the easiest way to to this is to create a .compose.env file by running:
+
+#            \$ cp .compose.env.example .compose.env
+# EOF
+#   exit 1
+# fi
+
+echo "INFO: Using compose profile ${COMPOSE_PROFILE}" >&2
+echo "INFO: ${DEV_SOURCE_PATH:-No} packages installed from source" >&2
+echo "INFO: Image suffix ${DEV_IMAGE_SUFFIX:-is unset}" >&2
+echo "INFO: Volume suffix ${DEV_VOLUME_SUFFIX:-${DEV_IMAGE_SUFFIX:-is unset}}" >&2
+
+declare -xr DEV_SOURCE_PATH=${DEV_SOURCE_PATH:-}
+declare -xr COMPOSE_PROFILE=${COMPOSE_PROFILE:-}
+declare -xr COMPOSE_CONTEXT="${PWD}"
+declare -xr LOCK_REQUIREMENTS="${LOCK_REQUIREMENTS:-1}"
+declare -xr ENABLE_SIGNING="${ENABLE_SIGNING:-1}"
+declare -xr DEV_IMAGE_SUFFIX="${DEV_IMAGE_SUFFIX:-}"
+declare -xr DEV_VOLUME_SUFFIX="${DEV_VOLUME_SUFFIX:-${DEV_IMAGE_SUFFIX}}"
+declare -xr COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-oci_env${DEV_IMAGE_SUFFIX:-}}"
+declare -xr WITH_DEV_INSTALL="${WITH_DEV_INSTALL:-1}"
+
+declare -x DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-admin}"
+declare -x DJANGO_SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD:-password}"
+
+# profile loader
+# separate profiles with :
+# if profile has /, load from plugin/profiles
+# else load from ./profiles
+# add profile/{NAME}/compose.yaml to compose args
+# concatenate profile/{NAME}/pulp_config.env into ./.combined.env
+
+compose_args=(
+  -f 'base/compose.yaml'
+)
+
+cat 'base/config.env' > '.combined.env'
+
+if [[ ! -z "${COMPOSE_PROFILE}" ]]; then
+  IFS=':' read -ra src_path_list <<< "$COMPOSE_PROFILE"
+
+  for item in "${src_path_list[@]}"; do
+    compose_file="./profiles/${item}/compose.yaml"
+    config_file="./profiles/${item}/pulp_config.env"
+
+    if [[ "$item" == *\/* ]]
+    then
+      profile=()
+      IFS='/' read -ra profile <<< "$item"
+
+      compose_file="../${profile[0]}/profiles/${profile[1]}/compose.yaml"
+      config_file="../${profile[0]}/profiles/${profile[1]}/pulp_config.env"
+    fi
+
+    if [[ -f $compose_file ]]; then
+      compose_args+=(
+        -f $compose_file
+      )
+    fi
+
+    if [[ -f $config_file ]]; then
+      { echo "" & cat $config_file; } >> '.combined.env'
+    fi
+  done
+fi
+
+exec docker-compose "${compose_args[@]}" "$@"
