@@ -22,7 +22,11 @@ test/run-functional:
 
 .PHONY: database/psql
 database/psql:
-	./compose exec pulp bash -c 'psql -U pulp -d pulp'
+	./compose exec pulp bash -c 'pulpcore-manager dbshell'
+
+.PHONY: docker/bash
+docker/bash:
+	./compose exec pulp bash
 
 .PHONY: api/shell
 api/shell:
