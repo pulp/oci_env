@@ -19,3 +19,11 @@ test/functional/install_requirements:
 .PHONY: test/run-functional
 test/run-functional:
 	./compose exec pulp bash /src/oci_env/base/tests/run_functional_tests.sh $(PLUGIN) $(FLAGS)
+
+.PHONY: database/psql
+database/psql:
+	./compose exec pulp bash -c 'psql -U pulp -d pulp'
+
+.PHONY: api/shell
+api/shell:
+	./compose exec pulp bash -c 'pulpcore-manager shell'
