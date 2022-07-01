@@ -92,7 +92,8 @@ The bindings can be regenerated with `make generate_client PLUGIN=pulp_ansible`.
 
 1. Add "epdb" to the functest_requirements.txt file in your pulp_ansible checkout path.
 2. Inside any functional test, add `import epdb; epdb.st()`.
-3. Re-run the `test/functional/install_requirements` and `test/run-functional PLUGIN=pulp_ansible` again.
+3. Add `--capture=no` to the pytest args in base/tests/run_functional_tests.sh 
+4. Re-run the `test/functional/install_requirements` and `test/run-functional PLUGIN=pulp_ansible` makefile targets again.
 
 ### Unit
 
