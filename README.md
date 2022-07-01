@@ -108,6 +108,7 @@ Each profile goes in it's own directory and can include:
 
 - `compose.yaml`: This is a docker compse file that can define new services or modify the base `pulp` service.
 - `pulp_config.env`: Environment file that defines any settings that the profile needs to run.
+- `init.sh`: Script that gets run when the environment loads. Can be used to initialize data and set up tests. Must be a bash script.
 
 ### Example
 

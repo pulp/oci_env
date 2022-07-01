@@ -3,5 +3,5 @@
 with-contenv
 
 foreground {
-    bash /utils.sh create_super_user
+    bash /src/oci_env/.init.sh
 }

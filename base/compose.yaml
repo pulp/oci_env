@@ -38,14 +38,17 @@ services:
       - _base
     volumes:
       - "${COMPOSE_CONTEXT}/..:/src:z"
-      - "pulp:/var/lib/pulp"
-      - "redis_data:/data"
-      - "pg_data:/var/lib/pgsql"
+      - "oci_pulp:/var/lib/pulp"
+      - "oci_redis_data:/data"
+      - "oci_pg_data:/var/lib/pgsql"
+    # For the tests to pass CONTENT_ORIGIN needs to be localhost on the same port inside and outside of the container
+    extra_hosts:
+      localhost: "host-gateway"
 
 volumes:
-  pulp:
+  oci_pulp:
     name: pulp${DEV_VOLUME_SUFFIX:-}
-  pg_data:
+  oci_pg_data:
     name: pg_data${DEV_VOLUME_SUFFIX:-}
-  redis_data:
+  oci_redis_data:
     name: redis_data${DEV_VOLUME_SUFFIX:-}
