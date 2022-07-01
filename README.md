@@ -88,6 +88,12 @@ make test/run-functional PLUGIN=pulp_ansible FLAGS="-k my_test_name"
 
 The bindings can be regenerated with `make generate_client PLUGIN=pulp_ansible`.
 
+#### Debugging functional tests
+
+1. Add "epdb" to the functest_requirements.txt file in your pulp_ansible checkout path.
+2. Inside any functional test, add `import epdb; epdb.st()`.
+3. Re-run the `test/functional/install_requirements` and `test/run-functional PLUGIN=pulp_ansible` again.
+
 ### Unit
 
 Coming soon!
