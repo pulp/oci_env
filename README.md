@@ -52,7 +52,7 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
     ./compose up 
     ```
 
-    The ./compose script accepts all the same arguments as `podamn-compose` or `docker-compose`
+    The ./compose script accepts all the same arguments as `podman-compose` or `docker-compose`
 
     By default the API will be served from http://localhost:5001/pulp/api/v3/. You can login with `admin`/`password` by default.
     The api will reload anytime changes are made to any of the `DEV_SOURCE_PATH` projects.
