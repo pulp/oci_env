@@ -65,6 +65,12 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 
 ## Running Tests
 
+### Lint
+
+make test/lint PROJECT=pulp_ansible
+
+Note: The `test/lint` target also calls the `dev/install_dev_requirements` target.
+
 ### Functional
 
 Before functional tests can be run, you must clone github.com/pulp/pulp-openapi-generator into the parent directory.
