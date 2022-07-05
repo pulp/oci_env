@@ -24,6 +24,10 @@ test/run-functional:
 database/psql:
 	./compose exec pulp bash -c 'pulpcore-manager dbshell'
 
+.PHONY: database/reset
+database/reset:
+	./compose exec pulp bash /src/oci_env/base/dev/database_reset.sh
+
 .PHONY: docker/bash
 docker/bash:
 	./compose exec pulp bash
@@ -31,3 +35,7 @@ docker/bash:
 .PHONY: api/shell
 api/shell:
 	./compose exec pulp bash -c 'pulpcore-manager shell'
+
+.PHONY: api/show_urls
+api/show_urls:
+	./compose exec pulp bash /src/oci_env/base/dev/show_urls.sh
