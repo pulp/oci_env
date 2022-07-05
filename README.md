@@ -116,6 +116,21 @@ Each profile goes in it's own directory and can include:
 - `pulp_config.env`: Environment file that defines any settings that the profile needs to run.
 - `init.sh`: Script that gets run when the environment loads. Can be used to initialize data and set up tests. Must be a bash script.
 
+### Variables
+
+These variables can be used in `pulp_config.env` and `compose.yaml`:
+
+- `API_HOST`: hostname where pulp expects to run.
+- `API_PORT`: port that pulp expects to run on. This port will also get exposed on the pulp container.
+- `API_PROTOCOL`: can be http or https.
+
+Example pulp_config.env:
+
+```
+PULP_ANSIBLE_API_HOSTNAME="${API_PROTOCOL}://${API_HOST}:${API_PORT}"
+PULP_ANSIBLE_CONTENT_HOSTNAME="${API_PROTOCOL}://${API_HOST}:${API_PORT}/pulp/content"
+```
+
 ### Example
 
 Profile structure in the galaxy_ng plugin
@@ -155,8 +170,18 @@ services:
 pulp_config.env: The UI expects the galaxy apis to be served from `/api/automation-hub/` and for the app to be launched in standalone mode. The environment file provided with the profile ensures that the API is configured correctly to consume the new service.
 
 ```
+PULP_CONTENT_PATH_PREFIX=/api/automation-hub/v3/artifacts/collections/
+
 PULP_GALAXY_API_PATH_PREFIX=/api/automation-hub/
-PULP_GALAXY_DEPLOYMENT_MODE=standalone
+
+PULP_GALAXY_COLLECTION_SIGNING_SERVICE=ansible-default
+PULP_RH_ENTITLEMENT_REQUIRED=insights
+
+PULP_ANSIBLE_API_HOSTNAME=${API_PROTOCOL}://${API_HOST}:${API_PORT}
+PULP_ANSIBLE_CONTENT_HOSTNAME=${API_PROTOCOL}://${API_HOST}:${API_PORT}/api/automation-hub/v3/artifacts/collections
+
+PULP_TOKEN_AUTH_DISABLED=true
+
 ```
 
 To activate this profile set `COMPOSE_PROFILE=galaxy_ng/ui`. Running this will launch the UI container along with pulp.

@@ -4,6 +4,8 @@ set -e
 
 declare PROJECT=$1
 
+source ./config_loader.sh
+
 if [ ! -d "../pulp-openapi-generator/" ] 
 then
     echo "Please clone github.com/pulp/pulp-openapi-generator into ../pulp-openapi-generator/"
@@ -12,7 +14,6 @@ fi
 
 cd ../pulp-openapi-generator/
 
-export PULP_URL=http://localhost:5001
-# export PULP_API_ROOT=/pulp/api/v3/
+export PULP_URL=${API_PROTOCOL}://${API_HOST}:${API_PORT}
 
 ./generate.sh $PROJECT python

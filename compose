@@ -30,23 +30,12 @@ fi
 #   exit 1
 # fi
 
+source ./config_loader.sh
+
 echo "INFO: Using compose profile ${COMPOSE_PROFILE}" >&2
 echo "INFO: ${DEV_SOURCE_PATH:-No} packages installed from source" >&2
 echo "INFO: Image suffix ${DEV_IMAGE_SUFFIX:-is unset}" >&2
 echo "INFO: Volume suffix ${DEV_VOLUME_SUFFIX:-${DEV_IMAGE_SUFFIX:-is unset}}" >&2
-
-declare -xr DEV_SOURCE_PATH=${DEV_SOURCE_PATH:-}
-declare -xr COMPOSE_PROFILE=${COMPOSE_PROFILE:-}
-declare -xr COMPOSE_CONTEXT="${PWD}"
-declare -xr LOCK_REQUIREMENTS="${LOCK_REQUIREMENTS:-0}"
-declare -xr ENABLE_SIGNING="${ENABLE_SIGNING:-1}"
-declare -xr DEV_IMAGE_SUFFIX="${DEV_IMAGE_SUFFIX:-}"
-declare -xr DEV_VOLUME_SUFFIX="${DEV_VOLUME_SUFFIX:-${DEV_IMAGE_SUFFIX}}"
-declare -xr COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-oci_env${DEV_IMAGE_SUFFIX:-}}"
-declare -xr WITH_DEV_INSTALL="${WITH_DEV_INSTALL:-1}"
-
-declare -x DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-admin}"
-declare -x DJANGO_SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD:-password}"
 
 # profile loader
 # separate profiles with :
@@ -101,5 +90,10 @@ if [[ ! -z "${COMPOSE_PROFILE}" ]]; then
     fi
   done
 fi
+
+# substitute variables allowed in env files
+sed -i '' -e 's|${API_PORT}|'$API_PORT'|g' .combined.env
+sed -i '' -e 's|${API_PROTOCOL}|'$API_PROTOCOL'|g' .combined.env
+sed -i '' -e 's|${API_HOST}|'$API_HOST'|g' .combined.env
 
 exec docker-compose "${compose_args[@]}" "$@"
