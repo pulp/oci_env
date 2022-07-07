@@ -22,9 +22,10 @@ install_local_deps() {
             log_message "Installing path ${item} in editable mode."
 
             if [[ "${LOCK_REQUIREMENTS}" -eq "1" ]]; then
-                pip3 install --no-cache-dir --no-deps --editable "$src_path" >/dev/null
+            # the oci images expect all the pulp binaries to land in /usr/local/bin/, not the default /usr/bin/
+                pip3 install --prefix /usr/local/ --no-cache-dir --no-deps --editable "$src_path" >/dev/null
             else
-                pip3 install --no-cache-dir --editable "$src_path" >/dev/null
+                pip3 install --prefix /usr/local/ --no-cache-dir --editable "$src_path" >/dev/null
             fi
 
         else
