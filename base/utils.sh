@@ -28,6 +28,13 @@ install_local_deps() {
                 pip3 install --prefix /usr/local/ --no-cache-dir --editable "$src_path" >/dev/null
             fi
 
+            nginx_config="${src_path}/${item}/app/webserver_snippets/nginx.conf"
+
+            # use cp since ln doesn't work on mounted files
+            if [[ -f $nginx_config ]]; then
+                cp "${nginx_config}" "/etc/nginx/pulp/${item}.conf"
+            fi
+
         else
             log_message "WARNING: Source path ${item} is not a directory."
         fi
