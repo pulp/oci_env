@@ -1,3 +1,4 @@
 .compose.env
 .combined.env
 .init.sh
+*.bak

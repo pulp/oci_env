@@ -92,8 +92,10 @@ if [[ ! -z "${COMPOSE_PROFILE}" ]]; then
 fi
 
 # substitute variables allowed in env files
-sed -i -e 's|${API_PORT}|'$API_PORT'|g' .combined.env
-sed -i -e 's|${API_PROTOCOL}|'$API_PROTOCOL'|g' .combined.env
-sed -i -e 's|${API_HOST}|'$API_HOST'|g' .combined.env
+sed -i.bak -e 's|${API_PORT}|'$API_PORT'|g' .combined.env
+sed -i.bak -e 's|${API_PROTOCOL}|'$API_PROTOCOL'|g' .combined.env
+sed -i.bak -e 's|${API_HOST}|'$API_HOST'|g' .combined.env
+
+rm .combined.env.bak
 
 exec docker-compose "${compose_args[@]}" "$@"
