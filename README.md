@@ -25,7 +25,7 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 
 2. Define your `.compose.env` file.
 
-    `cp compose.env.example .compose.env`
+    `cp .compose.env.example .compose.env`
 
     A minimal `.compose.env` will look something like this:
 
