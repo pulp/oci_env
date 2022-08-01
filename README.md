@@ -101,6 +101,22 @@ The bindings can be regenerated with `make generate_client PLUGIN=pulp_ansible`.
 3. Add `--capture=no` to the pytest args in base/tests/run_functional_tests.sh 
 4. Re-run the `test/functional/install_requirements` and `test/run-functional PLUGIN=pulp_ansible` makefile targets again.
 
+#### Using PyCharm remote debug server
+
+1. Start the debugger server in PyCharm. When using `podmand`, the hostname should be set to
+   `host.containers.internal` hostname. `Docker` users should use `host.docker.internal` hostname. 
+2. Add a break point to your Pythong code:
+```
+import pydevd_pycharm
+pydevd_pycharm.settrace('host.containers.internal', port=3013, stdoutToServer=True, stderrToServer=True)`
+```
+3. Restart all services you need to pick up the code change by running `s6-svc -r /var/run/s6/services/<service_name>`
+4. Perform the action that should trigger the code to run.
+
+Please note that `host.containers.internal` points to the wrong interface in `podman` < 4.1. When
+using `podman` < 4.1, you need modify `/etc/hosts` inside the container running Pulp with the IP
+address for the publicly facing network interface on the host.
+
 ### Unit
 
 Coming soon!
@@ -123,6 +139,16 @@ These variables can be used in `pulp_config.env` and `compose.yaml`:
 - `API_HOST`: hostname where pulp expects to run.
 - `API_PORT`: port that pulp expects to run on. This port will also get exposed on the pulp container.
 - `API_PROTOCOL`: can be http or https.
+- `DEV_SOURCE_PATH`: colon separated list of python dependencies to include from source.
+- `COMPOSE_PROFILE`: colon separated list of profiles
+- `DJANGO_SUPERUSER_USERNAME`: username for the super user (default: admin)
+- `DJANGO_SUPERUSER_PASSWORD`: password for the super user (default: password)
+- `NGINX_PORT`: the port on which Nginx listens to http traffic (default: 80)
+- `NGINX_SSL_PORT`: the port on which Nginx listens to https traffic (default: 443). `API_PROTOCOL` needs to be `https`.
+- `COMPOSE_CONTEXT`: the context directory for podman-compose (default: current working directory)
+- `DEV_IMAGE_SUFFIX`: the suffix for the image name
+- `DEV_VOLUME_SUFFIX`: the suffic for the volume
+- `COMPOSE_PROJECT_NAME`: the project name passed to podman-compose (default: -oci_env)
 
 Example pulp_config.env:
 

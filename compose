@@ -44,8 +44,8 @@ echo "INFO: Volume suffix ${DEV_VOLUME_SUFFIX:-${DEV_IMAGE_SUFFIX:-is unset}}" >
 # add profile/{NAME}/compose.yaml to compose args
 # concatenate profile/{NAME}/pulp_config.env into ./.combined.env
 
-compose_args=(
-  -f 'base/compose.yaml'
+compose_file_list=(
+  'base/compose.yaml'
 )
 
 cat 'base/pulp_config.env' > '.combined.env'
@@ -76,7 +76,8 @@ if [[ ! -z "${COMPOSE_PROFILE}" ]]; then
     fi
 
     if [[ -f $compose_file ]]; then
-      compose_args+=(
+
+      compose_file_list+=(
         -f $compose_file
       )
     fi
@@ -95,7 +96,56 @@ fi
 sed -i.bak -e 's|${API_PORT}|'$API_PORT'|g' .combined.env
 sed -i.bak -e 's|${API_PROTOCOL}|'$API_PROTOCOL'|g' .combined.env
 sed -i.bak -e 's|${API_HOST}|'$API_HOST'|g' .combined.env
+sed -i.bak -e 's|${DEV_SOURCE_PATH}|'$DEV_SOURCE_PATH'|g' .combined.env
+sed -i.bak -e 's|${COMPOSE_PROFILE}|'$COMPOSE_PROFILE'|g' .combined.env
+sed -i.bak -e 's|${DJANGO_SUPERUSER_USERNAME}|'$DJANGO_SUPERUSER_USERNAME'|g' .combined.env
+sed -i.bak -e 's|${DJANGO_SUPERUSER_PASSWORD}|'$DJANGO_SUPERUSER_PASSWORD'|g' .combined.env
+sed -i.bak -e 's|${NGINX_PORT}|'$NGINX_PORT'|g' .combined.env
+sed -i.bak -e 's|${NGINX_SSL_PORT}|'$NGINX_SSL_PORT'|g' .combined.env
+sed -i.bak -e 's|${COMPOSE_CONTEXT}|'$COMPOSE_CONTEXT'|g' .combined.env
+sed -i.bak -e 's|${DEV_IMAGE_SUFFIX}|'$DEV_IMAGE_SUFFIX'|g' .combined.env
+sed -i.bak -e 's|${DEV_VOLUME_SUFFIX}|'$DEV_VOLUME_SUFFIX'|g' .combined.env
+sed -i.bak -e 's|${COMPOSE_PROJECT_NAME}|'$COMPOSE_PROJECT_NAME'|g' .combined.env
+
+# Iterate over all the compose files and perform variable substitution
+compose_args=()
+for compose_file_path in "${compose_file_list[@]}"; do
+  if [[ $compose_file_path == "-f" ]]; then
+    continue
+  fi
+  IFS="/" read -ra compose_file_path_list <<< "$compose_file_path"
+  filename="${compose_file_path_list[-1]}"
+  directory=${compose_file_path%%$filename}.compiled
+  compiled_file_name=${directory}/${filename}
+  mkdir -p $directory
+  # compile a compose.yaml from all variables
+  (source '.combined.env' &&
+  sed -e 's|${API_PORT}|'$API_PORT'|g' $compose_file_path > ${compiled_file_name} && \
+  sed -i.bak -e 's|${API_PROTOCOL}|'$API_PROTOCOL'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${API_HOST}|'$API_HOST'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${DEV_SOURCE_PATH}|'$DEV_SOURCE_PATH'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${COMPOSE_PROFILE}|'$COMPOSE_PROFILE'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${DJANGO_SUPERUSER_USERNAME}|'$DJANGO_SUPERUSER_USERNAME'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${DJANGO_SUPERUSER_PASSWORD}|'$DJANGO_SUPERUSER_PASSWORD'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${NGINX_PORT}|'$NGINX_PORT'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${NGINX_SSL_PORT}|'$NGINX_SSL_PORT'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${COMPOSE_CONTEXT}|'$COMPOSE_CONTEXT'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${DEV_IMAGE_SUFFIX}|'$DEV_IMAGE_SUFFIX'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${DEV_VOLUME_SUFFIX}|'$DEV_VOLUME_SUFFIX'|g' ${compiled_file_name} && \
+  sed -i.bak -e 's|${COMPOSE_PROJECT_NAME}|'$COMPOSE_PROJECT_NAME'|g' ${compiled_file_name} && \
+  rm ${compiled_file_name}.bak)
+  compose_args+=(
+    -f ${compiled_file_name}
+  )
+done
+
 
 rm .combined.env.bak
 
-exec docker-compose "${compose_args[@]}" "$@"
+if command -v podman-compose > /dev/null
+then
+  compose_exec=podman-compose
+else
+  compose_exec=docker-compose
+fi
+exec ${compose_exec} "${compose_args[@]}" -p "${COMPOSE_PROJECT_NAME}" "$@"
