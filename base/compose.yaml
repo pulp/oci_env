@@ -30,8 +30,10 @@ services:
       - "COMPOSE_PROFILE=${COMPOSE_PROFILE}"
       - "DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}"
       - "DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}"
+      - "NGINX_PORT=${NGINX_PORT}"
+      - "NGINX_SSL_PORT=${NGINX_SSL_PORT}"
     ports:
-      - "${API_PORT}:80"
+      - "${API_PORT}:${NGINX_PORT}"
     depends_on:
       - _base
     volumes:
