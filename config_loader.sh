@@ -18,6 +18,8 @@ declare -xr DJANGO_SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD:-password}"
 declare -xr API_HOST="${API_HOST:-localhost}"
 declare -xr API_PORT="${API_PORT:-5001}"
 declare -xr API_PROTOCOL="${API_PROTOCOL:-http}"
+declare -xr NGINX_PORT="${NGINX_PORT:-80}"
+declare -xr NGINX_SSL_PORT="${NGINX_SSL_PORT:-443}"
 
 
 # WIP configs

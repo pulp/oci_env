@@ -1,2 +1,20 @@
 #!/usr/bin/execlineb -P
+
+with-contenv
+
+importas -D 80 NGINX_PORT NGINX_PORT
+foreground {
+  /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/nginx.conf
+}
+
+importas -D 80 NGINX_PORT NGINX_PORT
+foreground {
+  /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/ssl_nginx.conf
+}
+
+importas -D 443 NGINX_SSL_PORT NGINX_SSL_PORT
+foreground {
+  /usr/bin/sed -i s/listen\ 443/listen\ "${NGINX_SSL_PORT}"/g /etc/nginx/ssl_nginx.conf
+}
+
 /usr/sbin/nginx
