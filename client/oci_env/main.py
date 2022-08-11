@@ -7,6 +7,7 @@ from oci_env.commands import (
     shell,
     test,
     generate_client,
+    pulpcore_manager
 )
 
 from oci_env.utils import (
@@ -24,6 +25,7 @@ def get_parser():
     parse_shell_command(subparsers)
     parse_test_command(subparsers)
     parse_generate_client_command(subparsers)
+    parse_pulpcore_manager_command(subparsers)
 
     return parser
 
@@ -46,7 +48,7 @@ def parse_shell_command(subparsers):
 
 
 def parse_test_command(subparsers):
-    parser = subparsers.add_parser('test', help='Launch an interactive shell.')
+    parser = subparsers.add_parser('test', help='Run tests and install requirements.')
     parser.add_argument('test', choices=["functional", "unit", "lint"])
     parser.add_argument('-i', action='store_true', dest='install_deps', help="Install the python dependencies for the selected test instead of running it. This will install all the test dependencies for each plugin in DEV_SOURCE_PATH.")
     parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test. If this is included with -i, only the test dependencies for the selected plugin will be installed.")
@@ -60,6 +62,12 @@ def parse_generate_client_command(subparsers):
     parser.add_argument('-i', action='store_true', dest='install_client', help="Install the client after generating it.")
 
     parser.set_defaults(func=generate_client)
+
+
+def parse_pulpcore_manager_command(subparsers):
+    parser = subparsers.add_parser('pulpcore-manager', help='Run a pulpcore-manager command.')
+    parser.add_argument('command', nargs=argparse.REMAINDER, help='Command to pass to pulpcore-manager.')
+    parser.set_defaults(func=pulpcore_manager)
 
 
 def main():

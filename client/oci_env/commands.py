@@ -15,8 +15,7 @@ def shell(args, client):
     if args.shell == "bash":
         cmd = ["bash"]
     elif args.shell == "python":
-        cmd = ["pulpcore-manager", "shell"]
-    # this one doesn't seem to work 
+        cmd = ["pulpcore-manager", "shell_plus"]
     elif args.shell == "db":
         cmd = ["pulpcore-manager", "dbshell"]
     else:
@@ -31,7 +30,7 @@ def test(args, client):
         test_script = f"/opt/scripts/install_{args.test}_requirements.sh"
 
         if args.plugin:
-            client.exec(["bash", test_script, project])
+            client.exec(["bash", test_script, args.plugin])
         else:
             for project in client.config["DEV_SOURCE_PATH"].split(":"):
                 client.exec(["bash", test_script, project])
@@ -67,3 +66,7 @@ def generate_client(args, client):
         subprocess.run(cmd, env=env)
         if args.install_client:
             client.exec(["bash", "/opt/scripts/install_client.sh", plugin])
+
+
+def pulpcore_manager(args, client):
+    client.exec(["pulpcore-manager"] + args.command, interactive=True)

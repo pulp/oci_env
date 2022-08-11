@@ -198,11 +198,21 @@ class Compose:
     def exec(self, cmd, container=None, interactive=False, pipe_output=False):
         container = container or self.config["API_CONTAINER"]
 
-        return self.compose_command(
+        proc = self.compose_command(
             ["exec", container] + cmd,
             interactive=interactive,
             pipe_output=pipe_output
         )
+
+        if isinstance(proc, int):
+            rc = proc
+        else:
+            rc = proc.returncode
+
+        if rc == 1:
+            print("compose exec command failed. Are the containers running?")
+
+        return proc
 
     def get_dynaconf_variable(self, name):
         cmd = ["bash", "/opt/scripts/get_dynaconf_var.sh", name]
