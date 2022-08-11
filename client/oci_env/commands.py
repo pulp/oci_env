@@ -60,6 +60,10 @@ def generate_client(args, client):
     env = {**client.config, "API_ROOT": api_root}
 
     for plugin in plugins:
-        subprocess.run(base_cmd + [plugin, ], env=env)
+        cmd = base_cmd + [plugin, ]
+        if args.is_verbose:
+            print(f"Running local command: {' '.join(cmd)}")
+
+        subprocess.run(cmd, env=env)
         if args.install_client:
             client.exec(["bash", "/opt/scripts/install_client.sh", plugin])

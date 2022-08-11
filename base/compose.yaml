@@ -32,8 +32,11 @@ services:
       - "API_HOST={API_HOST}"
       - "API_PORT={API_PORT}"
       - "API_PROTOCOL={API_PROTOCOL}"
+      - "NGINX_PORT={NGINX_PORT}"
+      - "NGINX_SSL_PORT={NGINX_SSL_PORT}"
+  
     ports:
-      - "{API_PORT}:80"
+      - "{API_PORT}:{NGINX_PORT}"
     depends_on:
       - _base
     volumes:
@@ -41,9 +44,6 @@ services:
       - "oci_pulp:/var/lib/pulp"
       - "oci_redis_data:/data"
       - "oci_pg_data:/var/lib/pgsql"
-    # For the tests to pass CONTENT_ORIGIN needs to be localhost on the same port inside and outside of the container
-    extra_hosts:
-      localhost: "host-gateway"
 
 volumes:
   oci_pulp:

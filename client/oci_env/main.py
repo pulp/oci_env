@@ -15,6 +15,7 @@ from oci_env.utils import (
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Pulp OCI image developer environment.')
+    parser.add_argument('-v', action='store_true', dest='is_verbose', help="Print extra debug information.")
 
     subparsers = parser.add_subparsers()
 
@@ -69,7 +70,7 @@ def main():
         parser.print_help()
         exit()
 
-    client = Compose()
+    client = Compose(args.is_verbose)
     try:
         args.func(args, client)
     except KeyboardInterrupt:

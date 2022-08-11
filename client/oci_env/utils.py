@@ -46,7 +46,10 @@ def get_config():
         "WORKER_CONTAINER": "pulp",
         "DEV_IMAGE_SUFFIX": "",
         "COMPOSE_CONTEXT": path,
-        "DEV_VOLUME_SUFFIX": ""
+        "DEV_VOLUME_SUFFIX": "",
+        "NGINX_PORT": "5001",
+        "NGINX_SSL_PORT": "443",
+
     }
 
     user_preferences = read_env_file(os.path.join(path, ".compose.env"))
@@ -167,10 +170,11 @@ def parse_profiles(config):
     return compose_files
 
 class Compose:
-    def __init__(self):
+    def __init__(self, is_verbose):
         self.path = get_oci_env_path()
         self.config = get_config()
         self.compose_files = parse_profiles(self.config)
+        self.is_verbose = is_verbose
 
     def compose_command(self, cmd, interactive=False, pipe_output=False):
         binary = [self.config["COMPOSE_BINARY"], "-p", self.config["COMPOSE_PROJECT_NAME"]]
@@ -182,6 +186,9 @@ class Compose:
             compose_files.append(f)
 
         cmd = binary + compose_files + cmd
+
+        if self.is_verbose:
+            print(f"Running command in container: {' '.join(cmd)}")
 
         if interactive:
             return subprocess.call(cmd)
