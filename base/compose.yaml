@@ -4,9 +4,9 @@ version: "3.7"
 services:
   _base:
     build:
-      context: "."
+      context: "{COMPOSE_CONTEXT}/base/"
       dockerfile: "Dockerfile"
-    image: "localhost/oci_env/pulp:base${DEV_IMAGE_SUFFIX:-}"
+    image: "localhost/oci_env/pulp:base{DEV_IMAGE_SUFFIX}"
     entrypoint: "/bin/true"
     tmpfs:
       - "/var/lib/pulp/artifact"
@@ -15,27 +15,29 @@ services:
       - "/tmp/ansible"
 
   pulp:
-    image: "localhost/oci_env/pulp:base${DEV_IMAGE_SUFFIX:-}"
+    image: "localhost/oci_env/pulp:base{DEV_IMAGE_SUFFIX}"
     tmpfs:
       - "/var/lib/pulp/artifact"
       - "/var/lib/pulp/scripts"
       - "/var/lib/pulp/tmp"
       - "/tmp/ansible"
     env_file:
-      - "${COMPOSE_CONTEXT}/.combined.env"
-      - "${COMPOSE_CONTEXT}/.compose.env"
+      - "{COMPOSE_CONTEXT}/.compiled/combined.env"
+      - "{COMPOSE_CONTEXT}/.compose.env"
     environment:
-      - "DEV_SOURCE_PATH=${DEV_SOURCE_PATH}"
-      - "LOCK_REQUIREMENTS=${LOCK_REQUIREMENTS}"
-      - "COMPOSE_PROFILE=${COMPOSE_PROFILE}"
-      - "DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}"
-      - "DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}"
+      - "DEV_SOURCE_PATH={DEV_SOURCE_PATH}"
+      - "COMPOSE_PROFILE={COMPOSE_PROFILE}"
+      - "DJANGO_SUPERUSER_USERNAME={DJANGO_SUPERUSER_USERNAME}"
+      - "DJANGO_SUPERUSER_PASSWORD={DJANGO_SUPERUSER_PASSWORD}"
+      - "API_HOST={API_HOST}"
+      - "API_PORT={API_PORT}"
+      - "API_PROTOCOL={API_PROTOCOL}"
     ports:
-      - "${API_PORT}:80"
+      - "{API_PORT}:80"
     depends_on:
       - _base
     volumes:
-      - "${COMPOSE_CONTEXT}/..:/src:z"
+      - "{COMPOSE_CONTEXT}/..:/src:z"
       - "oci_pulp:/var/lib/pulp"
       - "oci_redis_data:/data"
       - "oci_pg_data:/var/lib/pgsql"
@@ -45,8 +47,8 @@ services:
 
 volumes:
   oci_pulp:
-    name: oci_pulp${DEV_VOLUME_SUFFIX:-}
+    name: oci_pulp{DEV_VOLUME_SUFFIX}
   oci_pg_data:
-    name: oci_pg_data${DEV_VOLUME_SUFFIX:-}
+    name: oci_pg_data{DEV_VOLUME_SUFFIX}
   oci_redis_data:
-    name: oci_redis_data${DEV_VOLUME_SUFFIX:-}
+    name: oci_redis_data{DEV_VOLUME_SUFFIX}

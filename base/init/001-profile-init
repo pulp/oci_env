@@ -3,5 +3,5 @@
 with-contenv
 
 foreground {
-    bash /src/oci_env/.init.sh
+    bash /src/oci_env/.compiled/init.sh
 }

@@ -4,7 +4,7 @@ declare PROJECT=$1
 
 set -e
 
-export XDG_CONFIG_HOME=/src/oci_env/base/tests/
+export XDG_CONFIG_HOME=/opt/scripts/
 
 cd /src/$PROJECT/
 

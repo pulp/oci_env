@@ -1,13 +1,11 @@
 #!/bin/bash
 
 declare PROJECT=$1
+declare API_ROOT=$(bash /opt/scripts/get_dynaconf_var.sh API_ROOT)
 
 set -e
 
 export XDG_CONFIG_HOME=/opt/settings/
-
-cd /src/oci_env/
-source ./config_loader.sh
 
 mkdir -p /opt/settings/pulp_smash/
 
@@ -51,4 +49,4 @@ EOF
 
 cd /src/$PROJECT/
 
-pytest -r sx --color=yes --pyargs $PROJECT.tests.functional ${@:2}
+API_ROOT=API_ROOT pytest -r sx --color=yes --pyargs $PROJECT.tests.functional ${@:2}

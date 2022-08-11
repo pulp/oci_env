@@ -3,11 +3,11 @@ version: "3.7"
 services:
   ui:
     build:
-      context: "${ANSIBLE_HUB_UI_PATH}"
+      context: "{ANSIBLE_HUB_UI_PATH}"
     ports:
       - "8002:8002"
     volumes:
-      - "${ANSIBLE_HUB_UI_PATH}:/hub/app/"
+      - "{ANSIBLE_HUB_UI_PATH}:/hub/app/"
     tmpfs:
       # Forces npm to ignore the node_modules in the volume and look
       # for it in ../node_modules instead, while still being able to write .cache

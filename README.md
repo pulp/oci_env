@@ -4,12 +4,21 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 
 ## Getting started
 
-0. Install docker compose
+0. Install the `oci-env` python client.
 
-    See the [docker-compose installation docs](https://docs.docker.com/compose/install/). Podman Compose
-    might work, but hasn't been tested yet.
+  ```bash
+  cd oci_env
 
-1. Set up your directory with the following structure:
+  # if pip3 isn't available, try pip. Python 3 is required for oci-env.
+  pip3 install -e client
+  ```
+
+1. Install podman or docker compose
+
+    - [docker-compose installation docs](https://docs.docker.com/compose/install/). 
+    - [podman-compose installation docs](https://github.com/containers/podman-compose#installation).
+
+2. Set up your directory with the following structure:
 
     ```
     .
@@ -23,7 +32,7 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 
     The OCI env project should be in the same directory as any pulp plugins you wish to run.
 
-2. Define your `.compose.env` file.
+3. Define your `.compose.env` file.
 
     `cp .compose.env.example .compose.env`
 
@@ -42,34 +51,46 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
       and the `ui` profile from `galaxy_ng/profiles/`
     - `PULP_<SETTING_NAME>`: set any setting.py value for your environment. Example: `PULP_GALAXY_REQUIRE_CONTENT_APPROVAL=False`
 
-3. Run the environment
+4. Run the environment
 
     ```bash
     # build the images
-    ./compose build
+    oci-env compose build
 
     # start the service
-    ./compose up 
+    oci-env compose up 
     ```
 
-    The ./compose script accepts all the same arguments as `podman-compose` or `docker-compose`
+    The `oci-env compose` command accepts all the same arguments as `podman-compose` or `docker-compose`
 
     By default the API will be served from http://localhost:5001/pulp/api/v3/. You can login with `admin`/`password` by default.
     The api will reload anytime changes are made to any of the `DEV_SOURCE_PATH` projects.
 
-4. Teardown
+5. Teardown
 
-    To shut down the containerse run `./compose down`. Data in your system will be preserved when you restart the containers.
+    To shut down the containers run `oci-env compose down`. Data in your system will be preserved when you restart the containers.
 
-    To reset the databse run `./compose down --volumes`. This will shut down the containers and delete all the data in your system.
+    To reset the database run `oci-env compose down --volumes`. This will shut down the containers and delete all the data in your system.
+
+## The oci-env CLI
+
+This CLI has all the functionality required to run the OCI Env developer environment. See `oci-env --help` for a list of supported commands.
+
+`oci-env` can either be run in the `oci_env/` root dir, or it can be executed from anywhere by setting the `OCI_ENV_PATH` environment variable.
+The path supplied to `OCI_ENV_PATH` is expected to be the `oci_env/` project root dir (where your .compose.env file is defined.)
 
 ## Running Tests
 
 ### Lint
 
-make test/lint PROJECT=pulp_ansible
+```bash
+# install the lint requirements
 
-Note: The `test/lint` target also calls the `dev/install_dev_requirements` target.
+oci-env test -i lint
+
+# run the linter
+oci-env test -p PLUGIN_NAME lint
+```
 
 ### Functional
 
@@ -85,21 +106,24 @@ Ex:
 ```
 
 ```bash
-# Install the requirements. This will generate and install the bindings.
-make test/functional/install_requirements PLUGIN=pulp_ansible
+# Generate the pulp client. This will build clients for all plugins in DEV_SOURCE_PATH. -i will also install the client in the container.
+oci-env generate-client -i
+
+# Install the functional test requirements
+oci-env test -i functional
 
 # Run the tests
-make test/run-functional PLUGIN=pulp_ansible FLAGS="-k my_test_name"
+oci-env test -p PLUGIN_NAME functional
 ```
 
-The bindings can be regenerated with `make generate_client PLUGIN=pulp_ansible`.
+Bindings for specific plugins can be regenerated with `oci-env generate-client PLUGIN_NAME`.
 
 #### Debugging functional tests
 
 1. Add "epdb" to the functest_requirements.txt file in your pulp_ansible checkout path.
 2. Inside any functional test, add `import epdb; epdb.st()`.
 3. Add `--capture=no` to the pytest args in base/tests/run_functional_tests.sh 
-4. Re-run the `test/functional/install_requirements` and `test/run-functional PLUGIN=pulp_ansible` makefile targets again.
+4. Re-run `oci-env test -i functional` and `oci-env test -p pulp_ansible functional` commands again.
 
 ### Unit
 
@@ -124,11 +148,13 @@ These variables can be used in `pulp_config.env` and `compose.yaml`:
 - `API_PORT`: port that pulp expects to run on. This port will also get exposed on the pulp container.
 - `API_PROTOCOL`: can be http or https.
 
+Variables are templated using pythons `"{VAR}".template(VAR="my_var")` function, so they must be referenced as `{VARIABLE_NAME}` in environment and compose files.
+
 Example pulp_config.env:
 
 ```
-PULP_ANSIBLE_API_HOSTNAME="${API_PROTOCOL}://${API_HOST}:${API_PORT}"
-PULP_ANSIBLE_CONTENT_HOSTNAME="${API_PROTOCOL}://${API_HOST}:${API_PORT}/pulp/content"
+PULP_ANSIBLE_API_HOSTNAME="{API_PROTOCOL}://{API_HOST}:{API_PORT}"
+PULP_ANSIBLE_CONTENT_HOSTNAME="{API_PROTOCOL}://{API_HOST}:{API_PORT}/pulp/content"
 ```
 
 ### Example
@@ -150,11 +176,11 @@ version: "3.7"
 services:
   ui:
     build:
-      context: "${ANSIBLE_HUB_UI_PATH}"
+      context: "{ANSIBLE_HUB_UI_PATH}"
     ports:
       - "8002:8002"
     volumes:
-      - "${ANSIBLE_HUB_UI_PATH}:/hub/app/"
+      - "{ANSIBLE_HUB_UI_PATH}:/hub/app/"
     tmpfs:
       # Forces npm to ignore the node_modules in the volume and look
       # for it in ../node_modules instead, while still being able to write .cache
@@ -177,8 +203,8 @@ PULP_GALAXY_API_PATH_PREFIX=/api/automation-hub/
 PULP_GALAXY_COLLECTION_SIGNING_SERVICE=ansible-default
 PULP_RH_ENTITLEMENT_REQUIRED=insights
 
-PULP_ANSIBLE_API_HOSTNAME=${API_PROTOCOL}://${API_HOST}:${API_PORT}
-PULP_ANSIBLE_CONTENT_HOSTNAME=${API_PROTOCOL}://${API_HOST}:${API_PORT}/api/automation-hub/v3/artifacts/collections
+PULP_ANSIBLE_API_HOSTNAME={API_PROTOCOL}://{API_HOST}:{API_PORT}
+PULP_ANSIBLE_CONTENT_HOSTNAME={API_PROTOCOL}://{API_HOST}:{API_PORT}/api/automation-hub/v3/artifacts/collections
 
 PULP_TOKEN_AUTH_DISABLED=true
 

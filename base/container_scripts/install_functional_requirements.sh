@@ -12,6 +12,6 @@ fi
 
 cd /src/$PROJECT/
 
-pwd
-ls -al
-pip install -r dev_requirements.txt
+if [[ -f functest_requirements.txt ]]; then
+    pip install -r functest_requirements.txt
+fi
