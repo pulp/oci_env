@@ -17,8 +17,8 @@ def shell(args, client):
     elif args.shell == "python":
         cmd = ["pulpcore-manager", "shell"]
     # this one doesn't seem to work 
-    # elif args.shell == "db":
-    #     cmd = ["bash", "-c", "pulpcore-manager", "dbshell"]
+    elif args.shell == "db":
+        cmd = ["pulpcore-manager", "dbshell"]
     else:
         print("Unsupported shell")
         exit(1)
