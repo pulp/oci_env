@@ -56,7 +56,7 @@ def generate_client(args, client):
     else:
         plugins = client.config["DEV_SOURCE_PATH"].split(":")
 
-    env = {**client.config, "API_ROOT": api_root}
+    env = {**os.environ, **client.config, "PULP_API_ROOT": api_root}
 
     for plugin in plugins:
         cmd = base_cmd + [plugin, ]

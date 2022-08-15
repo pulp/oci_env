@@ -1,4 +1,3 @@
-from genericpath import isfile
 import os
 import subprocess
 import pathlib
@@ -215,7 +214,10 @@ class Compose:
         return proc
 
     def get_dynaconf_variable(self, name):
-        cmd = ["bash", "/opt/scripts/get_dynaconf_var.sh", name]
-        return self.exec(cmd, pipe_output=True).stdout.decode().strip()
+        # Reading data fom std out doesn't work very well because podman-compose prints out
+        # more than just the results of podman-compose exec.
+        cmd = ["bash", f"/opt/scripts/get_dynaconf_var.sh", name]
+        self.exec(cmd, pipe_output=True)
 
-        
+        with open(os.path.join(self.path, ".compiled/dynaconf_stdout"), "r") as f:
+            return f.read().strip()

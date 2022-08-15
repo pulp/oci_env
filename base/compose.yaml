@@ -34,6 +34,7 @@ services:
       - "API_PROTOCOL={API_PROTOCOL}"
       - "NGINX_PORT={NGINX_PORT}"
       - "NGINX_SSL_PORT={NGINX_SSL_PORT}"
+      - "COMPOSE_PROJECT_NAME={COMPOSE_PROJECT_NAME}"
   
     ports:
       - "{API_PORT}:{NGINX_PORT}"

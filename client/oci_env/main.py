@@ -7,7 +7,7 @@ from oci_env.commands import (
     shell,
     test,
     generate_client,
-    pulpcore_manager
+    pulpcore_manager,
 )
 
 from oci_env.utils import (
