@@ -6,7 +6,7 @@ declare PROJECT=$1
 
 if [ ! -d "../pulp-openapi-generator/" ] 
 then
-    echo "Please clone github.com/pulp/pulp-openapi-generator into ../pulp-openapi-generator/"
+    echo "Please clone github.com/pulp/pulp-openapi-generator into ${pwd}/pulp-openapi-generator/"
     exit 1
 fi
 

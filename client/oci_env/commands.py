@@ -1,6 +1,6 @@
-from gettext import install
 import subprocess
 import os
+from oci_env.utils import exit_if_failed
 
 def compose(args, client):
     client.compose_command(args.command, interactive=True)
@@ -30,17 +30,17 @@ def test(args, client):
         test_script = f"/opt/scripts/install_{args.test}_requirements.sh"
 
         if args.plugin:
-            client.exec(["bash", test_script, args.plugin])
+            exit_if_failed(client.exec(["bash", test_script, args.plugin]).returncode)
         else:
             for project in client.config["DEV_SOURCE_PATH"].split(":"):
-                client.exec(["bash", test_script, project])
+                exit_if_failed(client.exec(["bash", test_script, project]).returncode)
 
     else:
         if not args.plugin:
             print("plugin is required.")
             exit(1)
         test_script = f"/opt/scripts/run_{args.test}_tests.sh"
-        client.exec(["bash", test_script, args.plugin] + args.args, interactive=True)
+        exit_if_failed(client.exec(["bash", test_script, args.plugin] + args.args, interactive=True))
 
 
 def generate_client(args, client):
@@ -63,9 +63,10 @@ def generate_client(args, client):
         if args.is_verbose:
             print(f"Running local command: {' '.join(cmd)}")
 
-        subprocess.run(cmd, env=env)
+        exit_if_failed(subprocess.run(cmd, env=env, cwd=client.path).returncode)
+
         if args.install_client:
-            client.exec(["bash", "/opt/scripts/install_client.sh", plugin])
+            exit_if_failed(client.exec(["bash", "/opt/scripts/install_client.sh", plugin]).returncode)
 
 
 def pulpcore_manager(args, client):

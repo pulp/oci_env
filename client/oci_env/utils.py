@@ -168,6 +168,12 @@ def parse_profiles(config):
 
     return compose_files
 
+
+def exit_if_failed(rc):
+    if rc != 0:
+        exit(rc)
+
+
 class Compose:
     def __init__(self, is_verbose):
         self.path = get_oci_env_path()
@@ -198,7 +204,7 @@ class Compose:
         container = container or self.config["API_CONTAINER"]
 
         proc = self.compose_command(
-            ["exec", container] + cmd,
+            ["exec", "-T", container] + cmd,
             interactive=interactive,
             pipe_output=pipe_output
         )
@@ -208,7 +214,7 @@ class Compose:
         else:
             rc = proc.returncode
 
-        if rc == 1:
+        if rc != 0:
             print("compose exec command failed. Are the containers running?")
 
         return proc
@@ -217,7 +223,7 @@ class Compose:
         # Reading data fom std out doesn't work very well because podman-compose prints out
         # more than just the results of podman-compose exec.
         cmd = ["bash", f"/opt/scripts/get_dynaconf_var.sh", name]
-        self.exec(cmd, pipe_output=True)
+        self.exec(cmd)
 
         with open(os.path.join(self.path, ".compiled/dynaconf_stdout"), "r") as f:
             return f.read().strip()
