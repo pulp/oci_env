@@ -39,7 +39,10 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
     A minimal `.compose.env` will look something like this:
 
     ```
-    DEV_SOURCE_PATH='pulpcore:pulp_ansible'
+    DEV_SOURCE_PATH=pulpcore:pulp_ansible
+
+    # this is set to podman by default.
+    COMPOSE_BINARY=docker
     ```
 
     In this example, `../pulpcore` and `../pulp_ansible` will be installed from source. Other settings
