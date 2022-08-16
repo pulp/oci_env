@@ -79,7 +79,7 @@ jobs:
         run: |
           oci-env -v generate-client -i
           oci-env -v test -i -p pulp_file functional
-          oci-env -v test -p pulp_file functional -k test_generic_list
+          oci-env -v test -p pulp_file functional -k test_labels
           echo $?
 
       - name: Print server logs

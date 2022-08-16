@@ -16,7 +16,7 @@ cd ../pulp-openapi-generator/
 
 export PULP_URL=${API_PROTOCOL}://${API_HOST}:${API_PORT}
 
-if [ $COMPOSE_BINARY = "podman-compose" ]
+if [ $COMPOSE_BINARY = "podman" ]
 then
 
     CONTAINER_LABEL=$(podman container inspect ${COMPOSE_PROJECT_NAME}_pulp_1 | jq -r ".[0].ProcessLabel")
