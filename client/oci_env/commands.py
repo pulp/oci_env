@@ -6,6 +6,10 @@ def compose(args, client):
     client.compose_command(args.command, interactive=True)
 
 
+def exec(args, client):
+    client.exec(args.command, interactive=True, service=args.service)
+
+
 def db(args, client):
     pass
 

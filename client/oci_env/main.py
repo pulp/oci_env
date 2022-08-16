@@ -3,6 +3,7 @@ from distutils.command.config import config
 
 from oci_env.commands import (
     compose,
+    exec,
     db,
     shell,
     test,
@@ -21,6 +22,7 @@ def get_parser():
     subparsers = parser.add_subparsers()
 
     parse_compose_command(subparsers)
+    parse_exec_command(subparsers)
     # parse_db_command(subparsers)
     parse_shell_command(subparsers)
     parse_test_command(subparsers)
@@ -35,11 +37,20 @@ def parse_compose_command(subparsers):
     parser.add_argument('command', nargs=argparse.REMAINDER, help='Command to pass to compose.')
     parser.set_defaults(func=compose)
 
+
+def parse_exec_command(subparsers):
+    parser = subparsers.add_parser('exec', help="Run a command using podman/docker exec. This bypasses docker/podman-compose.")
+    parser.add_argument('command', nargs=argparse.REMAINDER, help='Command to pass to the container.')
+    parser.add_argument('-s', type=str, default=None, dest='service', help="Service to run the command on. This defaults to API_CONTAINER in your .compose.env, which is set to 'pulp' by default.")
+    parser.set_defaults(func=exec)
+
+
 # def parse_db_command(subparsers):
 #     parser = subparsers.add_parser('db', help='Manage the application DB.')
 #     parser.add_argument('action', nargs='?', choices=["reset", "snapshot", "restore"])
 #     parser.add_argument('-f', type=str, default="db.backup", dest='restore_file', help='Back up the database to a specific file.')
 #     parser.set_defaults(func=db)
+
 
 def parse_shell_command(subparsers):
     parser = subparsers.add_parser('shell', help='Launch an interactive shell.')

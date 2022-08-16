@@ -57,6 +57,10 @@ jobs:
         run: |
           cp oci_env/.github/assets/${TEST}_compose.env oci_env/.compose.env
 
+      - name: setup test profiles
+        run: |
+          cp -r oci_env/.github/assets/profiles/* oci_env/profiles/
+
       - name: install oci-env cli
         run: |
           pip install -e oci_env/client/
@@ -70,10 +74,10 @@ jobs:
         run: |
           sleep 100
       
-      - name: Test that the correct plugins are installed
+      - name: Test that the correct plugins are installed and that the API_ROOT was successfully changed.
         run: |
-          curl localhost:5001/pulp/api/v3/status/ | jq -r ".versions" | grep pulpcore
-          curl localhost:5001/pulp/api/v3/status/ | jq -r ".versions" | grep pulp-file
+          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
+          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulp-file
       
       - name: Test functional tests
         run: |
@@ -81,6 +85,17 @@ jobs:
           oci-env -v test -i -p pulp_file functional
           oci-env -v test -p pulp_file functional -k test_labels
           echo $?
+
+      - name: Test profile init scripts
+        run: |
+          oci-env exec cat /tmp/test_file1
+          oci-env exec cat /tmp/test_file2
+
+      - name: Test profile env vars
+        run: oci-env exec printenv | grep hello2
+    
+      - name: Test profile custom compose definitions
+        run: curl localhost:8002 | grep test
 
       - name: Print server logs
         if: always()
