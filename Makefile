@@ -20,6 +20,10 @@ test/lint:
 	make dev/install_dev_requirements PLUGIN=$(PLUGIN)
 	./compose exec pulp bash /src/oci_env/base/tests/run_lint.sh $(PLUGIN)
 
+.PHONY: test/run-unit
+test/run-unit:
+	./compose exec pulp bash /src/oci_env/base/tests/run_unit_tests.sh $(PLUGIN) $(FLAGS)
+
 .PHONY: test/functional/install_requirements
 test/functional/install_requirements:
 	make generate_client PLUGIN=$(PLUGIN)
