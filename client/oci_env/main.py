@@ -61,8 +61,8 @@ def parse_shell_command(subparsers):
 def parse_test_command(subparsers):
     parser = subparsers.add_parser('test', help='Run tests and install requirements.')
     parser.add_argument('test', choices=["functional", "unit", "lint"])
-    parser.add_argument('-i', action='store_true', dest='install_deps', help="Install the python dependencies for the selected test instead of running it. This will install all the test dependencies for each plugin in DEV_SOURCE_PATH.")
-    parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test. If this is included with -i, only the test dependencies for the selected plugin will be installed.")
+    parser.add_argument('-i', action='store_true', dest='install_deps', help="Install the python dependencies for the selected test instead of running it. If -p is not specified this will install all the test dependencies for each plugin in DEV_SOURCE_PATH.")
+    parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test. Tests won't run unless this is specified.")
     parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to pytest.')
     parser.set_defaults(func=test)
 

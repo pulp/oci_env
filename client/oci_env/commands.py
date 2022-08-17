@@ -39,10 +39,7 @@ def test(args, client):
             for project in client.config["DEV_SOURCE_PATH"].split(":"):
                 exit_if_failed(client.exec(["bash", test_script, project]).returncode)
 
-    else:
-        if not args.plugin:
-            print("plugin is required.")
-            exit(1)
+    if args.plugin:
         test_script = f"/opt/scripts/run_{args.test}_tests.sh"
         exit_if_failed(client.exec(["bash", test_script, args.plugin] + args.args, interactive=True))
 
