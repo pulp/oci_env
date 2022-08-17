@@ -84,6 +84,12 @@ jobs:
           oci-env -v generate-client -i
           oci-env -v test -i -p pulp_file functional -k test_labels
 
+      - name: Test lint
+        run: oci-env -v test -i -p pulp_file lint
+
+      - name: Test unit
+        run: oci-env test -i -p pulp_file unit
+
       - name: Test profile init scripts
         run: |
           oci-env exec cat /tmp/test_file1

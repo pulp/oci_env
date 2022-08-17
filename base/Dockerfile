@@ -1,6 +1,6 @@
 FROM ghcr.io/pulp/pulp-ci-centos:latest
 
-RUN pip3 install pulpcore && pip install django-extensions
+RUN pip3 install pulpcore django-extensions pulp-smash@git+https://github.com/pulp/pulp-smash.git
 
 COPY settings.py /etc/pulp/settings.py
 COPY init/000-a-src-install /etc/cont-init.d/000-a-src-install
