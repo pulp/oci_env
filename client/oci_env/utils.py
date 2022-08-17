@@ -36,7 +36,7 @@ def get_config():
 
     # These values shouldn't be edited by the user and have the highest precedence.
     constant_vals = {
-        "OCI_ENV_DIRECTORY": path.split(os.sep)[-1],
+        "OCI_ENV_DIRECTORY": path.strip(os.sep).split(os.sep)[-1],
         "COMPOSE_CONTEXT": path,
     }
 
