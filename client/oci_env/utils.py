@@ -219,18 +219,19 @@ class Compose:
 
         if interactive:
             proc = subprocess.call(cmd)
-            rc = proc
         else:
             proc = subprocess.run(cmd, capture_output=pipe_output)
-            rc = proc.returncode
-
-        if rc != 0:
-            if binary == "podman" and rc == 125:
-                print(f"Container {container} is not running.")
-            else:
-                print(f"{binary} exec command failed. Are the containers running?")
         return proc
 
     def get_dynaconf_variable(self, name):
-        cmd = ["bash", "/opt/scripts/get_dynaconf_var.sh", name]
-        return self.exec(cmd, pipe_output=True).stdout.decode().strip()
+        return self.exec("get_dynaconf_var.sh", args=[name], pipe_output=True).stdout.decode().strip()
+    
+    def exec_container_script(self, script, args=None, interactive=False, pipe_output=False):
+        """
+        Executes a script from the base/container_scripts/ directory in the container.
+        """
+        args = args or []
+        script_path = f"/src/{self.config['COMPOSE_PROJECT_NAME']}/base/container_scripts/{script}"
+        cmd = ["bash", script_path] + args
+
+        return self.exec(cmd, interactive=interactive, pipe_output=pipe_output)

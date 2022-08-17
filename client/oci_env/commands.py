@@ -31,17 +31,21 @@ def shell(args, client):
 
 def test(args, client):
     if args.install_deps:
-        test_script = f"/opt/scripts/install_{args.test}_requirements.sh"
+        test_script = f"install_{args.test}_requirements.sh"
 
         if args.plugin:
-            exit_if_failed(client.exec(["bash", test_script, args.plugin]).returncode)
+            exit_if_failed(client.exec_container_script(test_script, args=[args.plugin]).returncode)
         else:
             for project in client.config["DEV_SOURCE_PATH"].split(":"):
-                exit_if_failed(client.exec(["bash", test_script, project]).returncode)
+                exit_if_failed(client.exec_container_script(test_script, args=[project]).returncode)
 
     if args.plugin:
-        test_script = f"/opt/scripts/run_{args.test}_tests.sh"
-        exit_if_failed(client.exec(["bash", test_script, args.plugin] + args.args, interactive=True))
+        exit_if_failed(
+            client.exec_container_script(
+                f"run_{args.test}_tests.sh",
+                args=[args.plugin] + args.args,
+                interactive=True)
+        )
 
 
 def generate_client(args, client):
@@ -67,7 +71,7 @@ def generate_client(args, client):
         exit_if_failed(subprocess.run(cmd, env=env, cwd=client.path).returncode)
 
         if args.install_client:
-            exit_if_failed(client.exec(["bash", "/opt/scripts/install_client.sh", plugin]).returncode)
+            exit_if_failed(client.exec_container_script("install_client.sh", args=[plugin]).returncode)
 
 
 def pulpcore_manager(args, client):
