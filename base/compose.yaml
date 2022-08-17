@@ -35,7 +35,8 @@ services:
       - "NGINX_PORT={NGINX_PORT}"
       - "NGINX_SSL_PORT={NGINX_SSL_PORT}"
       - "COMPOSE_PROJECT_NAME={COMPOSE_PROJECT_NAME}"
-  
+      - S6_BEHAVIOUR_IF_STAGE2_FAILS=2
+
     ports:
       - "{API_PORT}:{NGINX_PORT}"
     depends_on:

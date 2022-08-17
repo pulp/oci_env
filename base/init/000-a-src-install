@@ -3,7 +3,4 @@
 with-contenv
 
 # TODO make this use execline instead of calling bash
-
-foreground {
-    bash /utils.sh install_local_deps
-}
+bash /utils.sh install_local_deps
