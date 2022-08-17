@@ -1,0 +1,106 @@
+---
+name: Integration tests
+on: 
+  pull_request:
+    branches:
+      - '**'
+  # push:
+  #   branches:
+  #     - '**'
+  workflow_dispatch:
+jobs:
+  integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - TEST: docker
+          - TEST: podman
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: "oci_env"
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: Set environment variables
+        run: |
+          echo "TEST=${{ matrix.env.TEST }}" >> $GITHUB_ENV
+          echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
+          echo "COMPOSE_INTERACTIVE_NO_CLI=1" >> $GITHUB_ENV
+
+      - name: clone pulpcore, pulp_file, pulp-openapi-generator
+        run: |
+          git clone --depth 1 https://github.com/pulp/pulpcore.git
+          git clone --depth 1 https://github.com/pulp/pulp_file.git
+          git clone --depth 1 https://github.com/pulp/pulp-openapi-generator.git
+
+      - name: Install podman compose
+        if: ${{ matrix.env.TEST == 'podman' }}
+        run: |
+          sudo apt update
+          sudo apt install -y httpie podman
+          sudo pip install podman-compose
+          podman --version
+  
+      - name: Install docker compose
+        if: ${{ matrix.env.TEST == 'docker' }}
+        run: |
+          sudo apt update
+          sudo curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh ./get-docker.sh
+
+      - name: setup .compose.env files
+        run: |
+          cp oci_env/.github/assets/${TEST}_compose.env oci_env/.compose.env
+
+      - name: setup test profiles
+        run: |
+          cp -r oci_env/.github/assets/profiles/* oci_env/profiles/
+
+      - name: install oci-env cli
+        run: |
+          pip install -e oci_env/client/
+
+      - name: Build and run the environment
+        run: |
+          oci-env compose build
+          oci-env compose up -d
+
+      - name: Wait for the stack to spin up
+        run: |
+          sleep 100
+      
+      - name: Test that the correct plugins are installed and that the API_ROOT was successfully changed.
+        run: |
+          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
+          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulp-file
+      
+      - name: Test functional tests
+        run: |
+          oci-env -v generate-client -i
+          oci-env -v test -i -p pulp_file functional -k test_labels
+
+      - name: Test lint
+        run: oci-env -v test -i -p pulp_file lint
+
+      - name: Test unit
+        run: oci-env test -i -p pulp_file unit
+
+      - name: Test profile init scripts
+        run: |
+          oci-env exec cat /tmp/test_file1
+          oci-env exec cat /tmp/test_file2
+
+      - name: Test profile env vars
+        run: oci-env exec printenv | grep hello2
+    
+      - name: Test profile custom compose definitions
+        run: curl localhost:8002 | grep test
+
+      - name: Print server logs
+        if: always()
+        run: oci-env compose logs

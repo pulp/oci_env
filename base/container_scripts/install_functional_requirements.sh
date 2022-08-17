@@ -12,9 +12,6 @@ fi
 
 cd /src/$PROJECT/
 
-pip install -e .
-pip install -r functest_requirements.txt
-
-cd /src/pulp-openapi-generator/$PROJECT-client
-
-pip install -e .
+if [[ -f functest_requirements.txt ]]; then
+    pip install -r functest_requirements.txt
+fi

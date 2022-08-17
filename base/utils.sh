@@ -21,12 +21,7 @@ install_local_deps() {
         if [[ -d "$src_path" ]]; then
             log_message "Installing path ${item} in editable mode."
 
-            if [[ "${LOCK_REQUIREMENTS}" -eq "1" ]]; then
-            # the oci images expect all the pulp binaries to land in /usr/local/bin/, not the default /usr/bin/
-                pip3 install --prefix /usr/local/ --no-cache-dir --no-deps --editable "$src_path" >/dev/null
-            else
-                pip3 install --prefix /usr/local/ --no-cache-dir --editable "$src_path" >/dev/null
-            fi
+            pip3 install --prefix /usr/local/ --no-cache-dir --editable "$src_path" >/dev/null
 
             nginx_config="${src_path}/${item}/app/webserver_snippets/nginx.conf"
 

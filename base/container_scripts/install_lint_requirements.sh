@@ -12,6 +12,6 @@ fi
 
 cd /src/$PROJECT/
 
-pwd
-ls -al
-pip install -r dev_requirements.txt
+if [[ -f lint_requirements.txt ]]; then
+    pip install -r lint_requirements.txt
+fi

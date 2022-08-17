@@ -1,13 +1,5 @@
-#!/bin/bash
-
-declare PROJECT=$1
-
-set -e
-
 export XDG_CONFIG_HOME=/opt/settings/
-
-cd /src/oci_env/
-source ./config_loader.sh
+export PULP_API_ROOT=$(bash /src/${OCI_ENV_DIRECTORY}/base/container_scripts/get_dynaconf_var.sh API_ROOT)
 
 mkdir -p /opt/settings/pulp_smash/
 
@@ -48,7 +40,3 @@ cat > /opt/settings/pulp_smash/settings.json <<EOF
   }
 }
 EOF
-
-cd /src/$PROJECT/
-
-pytest -r sx --color=yes --pyargs $PROJECT.tests.functional ${@:2}
