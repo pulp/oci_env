@@ -147,7 +147,13 @@ address for the publicly facing network interface on the host.
 
 Coming soon!
 
-## Writing New Profiles
+## Profiles
+
+### Custom Profiles
+
+You can create custom profiles for your instance of oci_env by creating adding _local to the end of the profile name. These profiles will be ignored by git. Example `oci_env/profiles/my_custom_profile_local/`.
+
+### Writing New Profiles
 
 OCI env has a pluggable profile system. Profiles can be defined in `oci_env/profiles/` or
 in any pulp plugin at `<PLUGIN_NAME>/profiles/`.
@@ -158,7 +164,7 @@ Each profile goes in it's own directory and can include:
 - `pulp_config.env`: Environment file that defines any settings that the profile needs to run.
 - `init.sh`: Script that gets run when the environment loads. Can be used to initialize data and set up tests. Must be a bash script.
 
-### Variables
+#### Variables
 
 These variables can be used in `pulp_config.env` and `compose.yaml`:
 
@@ -186,7 +192,7 @@ PULP_ANSIBLE_API_HOSTNAME="{API_PROTOCOL}://{API_HOST}:{API_PORT}"
 PULP_ANSIBLE_CONTENT_HOSTNAME="{API_PROTOCOL}://{API_HOST}:{API_PORT}/pulp/content"
 ```
 
-### Example
+#### Example
 
 Profile structure in the galaxy_ng plugin
 

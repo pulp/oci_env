@@ -1,5 +1,6 @@
 .compiled
 db_snapshots
+profiles/*_local/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
