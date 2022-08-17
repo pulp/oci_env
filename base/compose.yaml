@@ -49,8 +49,8 @@ services:
 
 volumes:
   oci_pulp:
-    name: oci_pulp{DEV_VOLUME_SUFFIX}
+    name: "{COMPOSE_PROJECT_NAME}_pulp{DEV_VOLUME_SUFFIX}"
   oci_pg_data:
-    name: oci_pg_data{DEV_VOLUME_SUFFIX}
+    name: "{COMPOSE_PROJECT_NAME}_pg_data{DEV_VOLUME_SUFFIX}"
   oci_redis_data:
-    name: oci_redis_data{DEV_VOLUME_SUFFIX}
+    name: "{COMPOSE_PROJECT_NAME}_redis_data{DEV_VOLUME_SUFFIX}"
