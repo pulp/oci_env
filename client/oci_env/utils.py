@@ -224,7 +224,7 @@ class Compose:
         return proc
 
     def get_dynaconf_variable(self, name):
-        return self.exec("get_dynaconf_var.sh", args=[name], pipe_output=True).stdout.decode().strip()
+        return self.exec_container_script("get_dynaconf_var.sh", args=[name], pipe_output=True).stdout.decode().strip()
     
     def exec_container_script(self, script, args=None, interactive=False, pipe_output=False):
         """
