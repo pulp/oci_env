@@ -8,6 +8,9 @@ def get_oci_env_path():
 
 
 def read_env_file(path):
+    """
+    Read the contents of a .env file into a dictionary.
+    """
     result = {}
 
     try:
@@ -16,7 +19,7 @@ def read_env_file(path):
                 if not line.startswith("#") and "=" in line:
                     key, val = line.split("=", maxsplit=1)
 
-                    result[key.strip()] = val.strip()
+                    result[key.strip("' \"")] = val.strip("' \"\n")
 
     except FileNotFoundError:
         print(f"No .compose.env file found in {path}.")
@@ -26,7 +29,16 @@ def read_env_file(path):
 
 
 def get_config():
+    """
+    Parse the .compose.env file and return any defaults that aren't set there.
+    """
     path = get_oci_env_path()
+
+    # These values shouldn't be edited by the user and have the highest precedence.
+    constant_vals = {
+        "OCI_ENV_DIRECTORY": os.path.dirname(path).split(os.sep)[-1],
+        "COMPOSE_CONTEXT": path,
+    }
 
     # default values
     config = {
@@ -37,30 +49,31 @@ def get_config():
         "API_HOST": "localhost",
         "API_PORT": "5001",
         "API_PROTOCOL": "http",
-        "COMPOSE_PROJECT_NAME": "oci_env",
+        "COMPOSE_PROJECT_NAME": constant_vals["OCI_ENV_DIRECTORY"],
         "COMPOSE_BINARY": "podman",
         "API_CONTAINER": "pulp",
         "DB_CONTAINER": "pulp",
         "CONTENT_APP_CONTAINER": "pulp",
         "WORKER_CONTAINER": "pulp",
         "DEV_IMAGE_SUFFIX": "",
-        "COMPOSE_CONTEXT": path,
         "DEV_VOLUME_SUFFIX": "",
         "NGINX_PORT": "5001",
         "NGINX_SSL_PORT": "443",
-
     }
 
     user_preferences = read_env_file(os.path.join(path, ".compose.env"))
 
     # override any defaults that the user set.
-    return {**config, **user_preferences}
+    return {**config, **user_preferences, **constant_vals}
 
 
 def parse_profiles(config):
+    """
+    Load the profiles defined in COMPOSE_PROFILE
+    """
     profiles = config["COMPOSE_PROFILE"].split(":")
     path = get_oci_env_path()
-    oci_dir = config["COMPOSE_PROJECT_NAME"]
+    oci_dir = config["OCI_ENV_DIRECTORY"]
     compiled_path = os.path.join(path, ".compiled")
 
     pathlib.Path(compiled_path).mkdir(exist_ok=True)
@@ -77,6 +90,7 @@ def parse_profiles(config):
         },
     ]
 
+    # parse the profiles and ensure that all of them exist.
     for profile in profiles:
         if "/" in profile:
             plugin, name = profile.split("/", maxsplit=1)
@@ -116,23 +130,35 @@ def parse_profiles(config):
 
     compose_files = []
 
+    # Compile the information in the compose profiles into .compiled.
     for profile in profile_paths:
         init_file = os.path.join(profile["path"], "init.sh")
         env_file = os.path.join(profile["path"], "pulp_config.env")
         compose_file = os.path.join(profile["path"], "compose.yaml")
 
+        # Add any init scripts to .compiled/init.sh.
         if os.path.isfile(init_file):
             script_path = os.path.join(profile['container_path'], "init.sh")
             init_script.append(f"bash {script_path}")
 
+        # Combine all of the pulp_config.env files into .compiled/combined.env. Format
+        # all the {VAR} templates.
         try: 
             with open(env_file, "r") as f:
                 for line in f:
-                    env_output.append(line.strip().format(**config))
-
+                    try:
+                        env_output.append(line.strip().format(**config))
+                    except KeyError as e:
+                        print(
+                            f"{env_file} contains variable {e}, which is not "
+                            "defined in your .compose.env. This value is required to "
+                            "be set."
+                        )
+                        exit(1)
         except FileNotFoundError:
             pass
 
+        # Copy any compose files into .compiled and format any variables in them.
         try: 
             with open(compose_file, "r") as f:
                 data = f.read()
@@ -175,6 +201,10 @@ def exit_if_failed(rc):
 
 
 class Compose:
+    """
+    This provides an interface to docker/podman compose for running compose commands
+    and executing scripts inside running containers.
+    """
     def __init__(self, is_verbose):
         self.path = get_oci_env_path()
         self.config = get_config()
@@ -182,6 +212,12 @@ class Compose:
         self.is_verbose = is_verbose
 
     def compose_command(self, cmd, interactive=False, pipe_output=False):
+        """
+        Run a docker-compose or podman-compose command.
+
+        This sets the correct project name and loads up all the compose files, but
+        takes in the rest of the arguments (exec, up, down, etc) from the user.
+        """
         binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
 
         compose_files = []
@@ -201,6 +237,13 @@ class Compose:
             return subprocess.run(cmd, capture_output=pipe_output)
 
     def exec(self, args, service=None, interactive=False, pipe_output=False):
+        """
+        Execute a script in a running container using podman or docker.
+
+        This uses podman or docker directly rather than attempting to use
+        docker/podman-compose since the information returned from the process
+        differs between podman-compose and docker-compose.
+        """
         service = service or self.config["API_CONTAINER"]
         project_name = self.config["COMPOSE_PROJECT_NAME"]
         binary = self.config["COMPOSE_BINARY"]
@@ -224,14 +267,19 @@ class Compose:
         return proc
 
     def get_dynaconf_variable(self, name):
+        """
+        Get the value of a configuration from dynaconf.
+        """
+
         return self.exec_container_script("get_dynaconf_var.sh", args=[name], pipe_output=True).stdout.decode().strip()
     
     def exec_container_script(self, script, args=None, interactive=False, pipe_output=False):
         """
         Executes a script from the base/container_scripts/ directory in the container.
         """
+
         args = args or []
-        script_path = f"/src/{self.config['COMPOSE_PROJECT_NAME']}/base/container_scripts/{script}"
+        script_path = f"/src/{self.config['OCI_ENV_DIRECTORY']}/base/container_scripts/{script}"
         cmd = ["bash", script_path] + args
 
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output)

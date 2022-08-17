@@ -69,6 +69,8 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
     By default the API will be served from http://localhost:5001/pulp/api/v3/. You can login with `admin`/`password` by default.
     The api will reload anytime changes are made to any of the `DEV_SOURCE_PATH` projects.
 
+    `oci-env compose` accepts all of the arguments that docker and podman compose take. You can also launch the environment in the background with `oci-env compose up -d` and access the logs with `oci-env compose logs -f` if you don't want to run it in the foreground.
+
 5. Teardown
 
     To shut down the containers run `oci-env compose down`. Data in your system will be preserved when you restart the containers.
@@ -87,11 +89,11 @@ The path supplied to `OCI_ENV_PATH` is expected to be the `oci_env/` project roo
 ### Lint
 
 ```bash
-# install the lint requirements
+# Install the lint requirements and run the linter for a specific plugin
 
-oci-env test -i lint
+oci-env test -i -p PLUGIN_NAME lint
 
-# run the linter
+# Run the linter without installing lint dependencies.
 oci-env test -p PLUGIN_NAME lint
 ```
 
@@ -112,10 +114,10 @@ Ex:
 # Generate the pulp client. This will build clients for all plugins in DEV_SOURCE_PATH. -i will also install the client in the container.
 oci-env generate-client -i
 
-# Install the functional test requirements
-oci-env test -i functional
+# Install the functional test requirements and run the tests
+oci-env test -i -p PLUGIN_NAME functional
 
-# Run the tests
+# Run the tests without installing dependencies.
 oci-env test -p PLUGIN_NAME functional
 ```
 
@@ -145,7 +147,13 @@ address for the publicly facing network interface on the host.
 
 ### Unit
 
-Coming soon!
+```bash
+# Install the unit test dependencies for a plugin and run it.
+oci-env test -i -p PLUGIN_NAME unit
+
+# Run the unit tests for a plugin without installing test dependencies.
+oci-env test -p PLUGIN_NAME unit
+```
 
 ## Profiles
 
@@ -168,22 +176,22 @@ Each profile goes in it's own directory and can include:
 
 These variables can be used in `pulp_config.env` and `compose.yaml`:
 
-- `API_HOST`: hostname where pulp expects to run.
-- `API_PORT`: port that pulp expects to run on. This port will also get exposed on the pulp container.
-- `API_PROTOCOL`: can be http or https.
+- `API_HOST`: hostname where pulp expects to run (default: localhost).
+- `API_PORT`: port that pulp expects to run on. This port will also get exposed on the pulp container (default: 5001).
+- `API_PROTOCOL`: can be http or https (default: http).
 - `DEV_SOURCE_PATH`: colon separated list of python dependencies to include from source.
-- `COMPOSE_PROFILE`: colon separated list of profiles
-- `DJANGO_SUPERUSER_USERNAME`: username for the super user (default: admin)
-- `DJANGO_SUPERUSER_PASSWORD`: password for the super user (default: password)
-- `NGINX_PORT`: the port on which Nginx listens to http traffic (default: 80)
+- `COMPOSE_PROFILE`: colon separated list of profiles.
+- `DJANGO_SUPERUSER_USERNAME`: username for the super user (default: admin).
+- `DJANGO_SUPERUSER_PASSWORD`: password for the super user (default: password).
+- `NGINX_PORT`: the port on which Nginx listens to http traffic. Note: the functional tests won't work correctly if this is different from API_PORT. (default: 5001).
 - `NGINX_SSL_PORT`: the port on which Nginx listens to https traffic (default: 443). `API_PROTOCOL` needs to be `https`.
-- `COMPOSE_CONTEXT`: the context directory for podman-compose (default: current working directory)
-- `DEV_IMAGE_SUFFIX`: the suffix for the image name
-- `DEV_VOLUME_SUFFIX`: the suffic for the volume
-- `COMPOSE_PROJECT_NAME`: the project name passed to podman-compose (default: -oci_env)
-
+- `DEV_IMAGE_SUFFIX`: the suffix for the image name. This can be used to launch a new instance of the containers without overriding a previous build (default: none).
+- `DEV_VOLUME_SUFFIX`: the suffix for the volume. This can be used to save the data from a specific build (default: none).
+- `COMPOSE_PROJECT_NAME`: the project name passed to podman-compose (default: the name of the directory your .compose.env is in).
 
 Variables are templated using pythons `"{VAR}".template(VAR="my_var")` function, so they must be referenced as `{VARIABLE_NAME}` in environment and compose files.
+
+Profiles can use variables outside of this list as well. They are just required to be defined in the user's .compose.env file as oci-env cannot provide default values for custom variables.
 
 Example pulp_config.env:
 
