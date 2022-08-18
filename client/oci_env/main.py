@@ -48,8 +48,8 @@ def parse_exec_command(subparsers):
 def parse_db_command(subparsers):
      parser = subparsers.add_parser('db', help='Manage the application DB.')
      # parser.add_argument('action', nargs='?', choices=["reset", "snapshot", "restore"])
-     parser.add_argument('action', nargs='?', choices=["reset"])
-     parser.add_argument('-f', type=str, default="db.backup", dest='restore_file', help='Back up the database to a specific file.')
+     parser.add_argument('action', nargs=1, choices=["reset"])
+     # parser.add_argument('-f', type=str, default="db.backup", dest='restore_file', help='Back up the database to a specific file.')
      parser.set_defaults(func=db)
 
 

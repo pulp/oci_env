@@ -11,7 +11,8 @@ def exec(args, client):
 
 
 def db(args, client):
-    if args.action == 'reset':
+    action = str(args.action[0])
+    if action == 'reset':
         exit_if_failed(
             client.exec_container_script(
                 f"database_reset.sh",
