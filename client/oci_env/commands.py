@@ -18,8 +18,9 @@ def db(args, client):
                 args=None,
                 interactive=True)
         )
+        client.compose_command(["restart"])
     else:
-        raise Exception(f'db {args.arction} not implemented')
+        raise Exception(f'db {args.action} not implemented')
 
 
 def shell(args, client):

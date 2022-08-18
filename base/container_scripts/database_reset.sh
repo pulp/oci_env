@@ -8,7 +8,3 @@ ls /var/run/s6/services | egrep ^pulp | xargs -I {} s6-svc -d /var/run/s6/servic
 
 # wipe the database non-interactive
 yes yes | pulpcore-manager reset_db --user postgres
-
-echo "#############################################################"
-echo "WARNING: Please kill the compose stack and bring it up again."
-echo "#############################################################"
