@@ -1,5 +1,4 @@
-README_TEMPLATE = """
-# {profile_name}
+README_TEMPLATE = """# {profile_name}
 
 ## Usage
 
@@ -21,8 +20,7 @@ README_TEMPLATE = """
 """
 
 
-INIT_SCRIPT_TEMPLATE = """
-#!/bin/bash
+INIT_SCRIPT_TEMPLATE = """#!/bin/bash
 
 # Add any scripts that need to run during startup here.
 
@@ -30,8 +28,7 @@ INIT_SCRIPT_TEMPLATE = """
 """
 
 
-COMPOSE_TEMPLATE = """
-# Add any custom services for your profile here.
+COMPOSE_TEMPLATE = """# Add any custom services for your profile here.
 
 # PLEASE DELETE THIS FILE IF IT'S UNMODIFIED.
 
@@ -43,15 +40,13 @@ COMPOSE_TEMPLATE = """
 """
 
 
-PULP_CONFIG_TEMPLATE = """
-# Add any environment variables that this profile requires to run here.
+PULP_CONFIG_TEMPLATE = """# Add any environment variables that this profile requires to run here.
 
 # PLEASE DELETE THIS FILE IF IT'S UNMODIFIED.
 """
 
 
-PROFILE_REQUIREMENTS_TEMPLATE = """
-# List any profiles here that are required for this profile to run correctly.
+PROFILE_REQUIREMENTS_TEMPLATE = """# List any profiles here that are required for this profile to run correctly.
 # If a profile listed here is not in COMPOSE_PROFILE when this profile is loaded
 # oci-env will exit.
 

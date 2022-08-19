@@ -123,8 +123,10 @@ def init_profile(args, client):
         profiles_dir = os.path.abspath(
             os.path.join(client.path, "..", args.plugin, "profiles")
         )
+        profile_name = f"{args.plugin}/{args.profile_name}"
     else:
         profiles_dir = os.path.join(client.path, "profiles")
+        profile_name = args.profile_name
 
     new_profile_dir = os.path.join(profiles_dir, args.profile_name)
 
@@ -138,6 +140,7 @@ def init_profile(args, client):
 
     for template in profile_templates:
         with open(os.path.join(new_profile_dir, template["file"]), "x") as f:
-            f.write(template["template"].format(profile_name=args.profile_name))
+            f.write(template["template"].format(profile_name=profile_name))
 
-    print(f"New profile successfully created at: {new_profile_dir}")
+    print(f"New profile \"{profile_name}\" successfully created at: {new_profile_dir}")
+    print(f"To use it set \"COMPOSE_PROFILE={profile_name}\"")
