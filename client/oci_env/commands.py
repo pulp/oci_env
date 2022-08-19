@@ -2,9 +2,13 @@ from multiprocessing.connection import Client
 import subprocess
 import os
 import time
+import pathlib
 
 from urllib import request
+
 from oci_env.utils import exit_if_failed
+from oci_env.templates import profile_templates
+
 
 def compose(args, client):
     client.compose_command(args.command, interactive=True)
@@ -112,3 +116,28 @@ def generate_client(args, client):
 
 def pulpcore_manager(args, client):
     client.exec(["pulpcore-manager"] + args.command, interactive=True)
+
+
+def init_profile(args, client):
+    if args.plugin:
+        profiles_dir = os.path.abspath(
+            os.path.join(client.path, "..", args.plugin, "profiles")
+        )
+    else:
+        profiles_dir = os.path.join(client.path, "profiles")
+
+    new_profile_dir = os.path.join(profiles_dir, args.profile_name)
+
+    pathlib.Path(profiles_dir).mkdir(exist_ok=True)
+
+    try:
+        pathlib.Path(new_profile_dir).mkdir(exist_ok=False)
+    except FileExistsError:
+        print(f"A profile already exists at {new_profile_dir}")
+        exit(1)
+
+    for template in profile_templates:
+        with open(os.path.join(new_profile_dir, template["file"]), "x") as f:
+            f.write(template["template"].format(profile_name=args.profile_name))
+
+    print(f"New profile successfully created at: {new_profile_dir}")

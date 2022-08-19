@@ -175,11 +175,23 @@ You can create custom profiles for your instance of oci_env by creating adding _
 OCI env has a pluggable profile system. Profiles can be defined in `oci_env/profiles/` or
 in any pulp plugin at `<PLUGIN_NAME>/profiles/`.
 
+To generate a new profile template run:
+
+```bash
+# Generate a new profile in oci_env
+oci-env init-profile my_profile
+
+# Generate a new profile in a plugin repo
+oci-env init-profile -p PLUGIN_NAME my_profile
+```
+
 Each profile goes in it's own directory and can include:
 
-- `compose.yaml`: This is a docker compse file that can define new services or modify the base `pulp` service.
+- `compose.yaml`: This is a docker compose file that can define new services or modify the base `pulp` service.
 - `pulp_config.env`: Environment file that defines any settings that the profile needs to run.
 - `init.sh`: Script that gets run when the environment loads. Can be used to initialize data and set up tests. Must be a bash script.
+- `plugin_reqirements.txt`: A list of other profiles that are required to be set in COMPOSE_PROFILE for this profile to function.
+- `README.md`: Readme file describing what the profile is for and how to use it.
 
 #### Variables
 

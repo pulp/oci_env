@@ -9,11 +9,13 @@ from oci_env.commands import (
     test,
     generate_client,
     pulpcore_manager,
+    init_profile
 )
 
 from oci_env.utils import (
     Compose
 )
+
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Pulp OCI image developer environment.')
@@ -28,6 +30,7 @@ def get_parser():
     parse_test_command(subparsers)
     parse_generate_client_command(subparsers)
     parse_pulpcore_manager_command(subparsers)
+    parse_init_profile_command(subparsers)
 
     return parser
 
@@ -46,11 +49,11 @@ def parse_exec_command(subparsers):
 
 
 def parse_db_command(subparsers):
-     parser = subparsers.add_parser('db', help='Manage the application DB.')
-     # parser.add_argument('action', nargs='?', choices=["reset", "snapshot", "restore"])
-     parser.add_argument('action', nargs=1, choices=["reset"])
-     # parser.add_argument('-f', type=str, default="db.backup", dest='restore_file', help='Back up the database to a specific file.')
-     parser.set_defaults(func=db)
+    parser = subparsers.add_parser('db', help='Manage the application DB.')
+    # parser.add_argument('action', nargs='?', choices=["reset", "snapshot", "restore"])
+    parser.add_argument('action', nargs=1, choices=["reset"])
+    # parser.add_argument('-f', type=str, default="db.backup", dest='restore_file', help='Back up the database to a specific file.')
+    parser.set_defaults(func=db)
 
 
 def parse_shell_command(subparsers):
@@ -80,6 +83,13 @@ def parse_pulpcore_manager_command(subparsers):
     parser = subparsers.add_parser('pulpcore-manager', help='Run a pulpcore-manager command.')
     parser.add_argument('command', nargs=argparse.REMAINDER, help='Command to pass to pulpcore-manager.')
     parser.set_defaults(func=pulpcore_manager)
+
+
+def parse_init_profile_command(subparsers):
+    parser = subparsers.add_parser('init-profile', help='Create a new OCI Env profile.')
+    parser.add_argument('-p', type=str, dest='plugin', default="", help="Plugin to add the new profile to. If none is specified this will be added to oci_env/profiles.")
+    parser.add_argument('profile_name', nargs="?", help='Nome of the profile.')
+    parser.set_defaults(func=init_profile)
 
 
 def main():

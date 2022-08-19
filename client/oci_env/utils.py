@@ -135,6 +135,7 @@ def parse_profiles(config):
         init_file = os.path.join(profile["path"], "init.sh")
         env_file = os.path.join(profile["path"], "pulp_config.env")
         compose_file = os.path.join(profile["path"], "compose.yaml")
+        profile_requirements_file = os.path.join(profile["path"], "profile_requirements.txt")
 
         # Add any init scripts to .compiled/init.sh.
         if os.path.isfile(init_file):
@@ -182,6 +183,21 @@ def parse_profiles(config):
 
                 with open(compose_file, "w") as out_file:
                     out_file.write(data)
+
+        except FileNotFoundError:
+            pass
+
+        try:
+            with open(profile_requirements_file, "r") as f:
+
+                for line in f:
+                    req_profile = line.strip()
+                    if req_profile.startswith("#") or req_profile == "":
+                        continue
+
+                    if req_profile not in config["COMPOSE_PROFILE"].split(profile["name"])[0]:
+                        print(f"\"{req_profile}\" is required to be in your COMPOSE_PROFILE config before \"{profile['name']}\"")
+                        exit(1)
 
         except FileNotFoundError:
             pass
