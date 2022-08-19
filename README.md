@@ -75,7 +75,7 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 
     To shut down the containers run `oci-env compose down`. Data in your system will be preserved when you restart the containers.
 
-    To reset the database run `oci-env compose down --volumes`. This will shut down the containers and delete all the data in your system.
+    To delete the database run `oci-env compose down --volumes`. This will shut down the containers and delete all the container data in your system.
 
 ## The oci-env CLI
 
@@ -83,6 +83,15 @@ This CLI has all the functionality required to run the OCI Env developer environ
 
 `oci-env` can either be run in the `oci_env/` root dir, or it can be executed from anywhere by setting the `OCI_ENV_PATH` environment variable.
 The path supplied to `OCI_ENV_PATH` is expected to be the `oci_env/` project root dir (where your .compose.env file is defined.)
+
+## Resetting the DB
+
+The DB can be reset and migrations rerun with the `oci-env db reset` command. Alternatively, you could run the following:
+
+```bash
+oci-env compose down --volumes  # Shut down the containers and delete all the container data on your system
+oci-env compose up
+```
 
 ## Running Tests
 
