@@ -1,5 +1,9 @@
+from multiprocessing.connection import Client
 import subprocess
 import os
+import time
+
+from urllib import request
 from oci_env.utils import exit_if_failed
 
 def compose(args, client):
@@ -13,6 +17,14 @@ def exec(args, client):
 def db(args, client):
     action = str(args.action[0])
     if action == 'reset':
+        api_root = client.get_dynaconf_variable("API_ROOT")
+        status_api = "{}://{}:{}{}api/v3/status/".format(
+            client.config["API_PROTOCOL"],
+            client.config["API_HOST"],
+            client.config["API_PORT"],
+            api_root,
+        )
+
         exit_if_failed(
             client.exec_container_script(
                 f"database_reset.sh",
@@ -20,6 +32,21 @@ def db(args, client):
                 interactive=True)
         )
         client.compose_command(["restart"])
+
+        for i in range(10):
+            print(f"Waiting for API to restart (attempt {i+1} of 10)")
+            try:
+                if request.urlopen(status_api).code == 200:
+                    print("Back online")
+                    return
+            except:
+                pass
+
+            time.sleep(10)
+        
+        print("Failed to restart")
+        exit(1)
+
     else:
         raise Exception(f'db {args.action} not implemented')
 

@@ -73,7 +73,11 @@ jobs:
       - name: Wait for the stack to spin up
         run: |
           sleep 100
-      
+
+      - name: Test DB Reset
+        run: |
+          oci-env db reset
+
       - name: Test that the correct plugins are installed and that the API_ROOT was successfully changed.
         run: |
           curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
