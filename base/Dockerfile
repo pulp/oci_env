@@ -3,7 +3,8 @@ FROM ghcr.io/pulp/pulp-ci-centos:latest
 # configure S6 to use env variables
 ENV S6_KEEP_ENV=1
 
-RUN pip3 install pulpcore django-extensions pulp-smash@git+https://github.com/pulp/pulp-smash.git
+COPY dev_requirements.txt /dev_requirements.txt
+RUN pip3 install -r dev_requirements.txt
 
 COPY settings.py /etc/pulp/settings.py
 COPY s6-rc.d/oci-env-prepare/ /etc/s6-overlay/s6-rc.d/oci-env-prepare/
