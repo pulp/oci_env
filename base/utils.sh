@@ -55,4 +55,8 @@ init_container() {
     set_nginx_port
 }
 
+run_profile_init_scripts() {
+    bash /opt/oci_env/.compiled/${COMPOSE_PROJECT_NAME}/init.sh
+}
+
 $1

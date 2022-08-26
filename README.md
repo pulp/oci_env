@@ -35,11 +35,11 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
     Note, the `/src/` folder in the container is the parent folder containing the `oci_env` and all
     plugin checkouts on the container host.
 
-3. Define your `.compose.env` file.
+3. Define your `compose.env` file.
 
-    `cp .compose.env.example .compose.env`
+    `cp compose.env.example compose.env`
 
-    A minimal `.compose.env` will look something like this:
+    A minimal `compose.env` will look something like this:
 
     ```
     DEV_SOURCE_PATH=pulpcore:pulp_ansible
@@ -85,7 +85,7 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 This CLI has all the functionality required to run the OCI Env developer environment. See `oci-env --help` for a list of supported commands.
 
 `oci-env` can either be run in the `oci_env/` root dir, or it can be executed from anywhere by setting the `OCI_ENV_PATH` environment variable.
-The path supplied to `OCI_ENV_PATH` is expected to be the `oci_env/` project root dir (where your .compose.env file is defined.)
+The path supplied to `OCI_ENV_PATH` is expected to be the `oci_env/` project root dir.
 
 ## Resetting the DB
 
@@ -94,6 +94,44 @@ The DB can be reset and migrations rerun with the `oci-env db reset` command. Al
 ```bash
 oci-env compose down --volumes  # Shut down the containers and delete all the container data on your system
 oci-env compose up
+```
+
+## Multiple environments
+
+oci-env supports running multiple environments simultaneously. To do this, simply create a new .env file such as:
+
+```
+# custom.env
+
+COMPOSE_PROFILE=my_profiles
+DEV_SOURCE_PATH=pulpcore
+
+# These two values must be different from the port and project name for any other instances of the
+# environment that are running to avoid conflicts.
+API_PORT=4002
+COMPOSE_PROJECT_NAME=test
+
+# If you want to use a different directory for your git checkouts you can set this
+# SRC_DIR=/path/to/my/git/checkouts
+```
+
+Once the file is defined run `oci-env -e custom.env compose up` to launch the new environment. The path to custom.env can be an absolute path or relative to your PWD. If you have `OCI_ENV_PATH` defined you can create a directory for your custom definitions and run oci-env from there without having to specify an absolute path.
+
+Example:
+
+```
+~
+├── oci_env
+└── oci_env_configs
+    ├── custom.env
+    └── test.env
+```
+
+```bash
+export OCI_ENV_PATH="~/oci_env"
+
+cd oci_env_configs
+oci-env -e custom.env compose up
 ```
 
 ## Running Tests
@@ -209,19 +247,18 @@ These variables can be used in `pulp_config.env` and `compose.yaml`:
 - `API_HOST`: hostname where pulp expects to run (default: localhost).
 - `API_PORT`: port that pulp expects to run on. This port will also get exposed on the pulp container (default: 5001).
 - `API_PROTOCOL`: can be http or https (default: http).
+- `NGINX_SSL_PORT`: the port on which Nginx listens to https traffic (default: 443). `API_PROTOCOL` needs to be `https`.
+- `NGINX_PORT`: the port on which Nginx listens to http traffic. Note: the functional tests won't work correctly if this is different from API_PORT. (default: 5001, or the value of `API_PORT`).
 - `DEV_SOURCE_PATH`: colon separated list of python dependencies to include from source.
 - `COMPOSE_PROFILE`: colon separated list of profiles.
 - `DJANGO_SUPERUSER_USERNAME`: username for the super user (default: admin).
 - `DJANGO_SUPERUSER_PASSWORD`: password for the super user (default: password).
-- `NGINX_PORT`: the port on which Nginx listens to http traffic. Note: the functional tests won't work correctly if this is different from API_PORT. (default: 5001).
-- `NGINX_SSL_PORT`: the port on which Nginx listens to https traffic (default: 443). `API_PROTOCOL` needs to be `https`.
-- `DEV_IMAGE_SUFFIX`: the suffix for the image name. This can be used to launch a new instance of the containers without overriding a previous build (default: none).
-- `DEV_VOLUME_SUFFIX`: the suffix for the volume. This can be used to save the data from a specific build (default: none).
-- `COMPOSE_PROJECT_NAME`: the project name passed to podman-compose (default: the name of the directory your .compose.env is in).
+- `COMPOSE_PROJECT_NAME`: the project name passed to podman-compose. Use this when running multiple environments to keep containers and volumes separate (default: oci_env).
+- `SRC_DIR`: path to load source code from. Set this if you want to use a different set of git checkouts with your environment (default: oci_env/../)
 
 Variables are templated using pythons `"{VAR}".template(VAR="my_var")` function, so they must be referenced as `{VARIABLE_NAME}` in environment and compose files.
 
-Profiles can use variables outside of this list as well. They are just required to be defined in the user's .compose.env file as oci-env cannot provide default values for custom variables.
+Profiles can use variables outside of this list as well. They are just required to be defined in the user's compose.env file as oci-env cannot provide default values for custom variables.
 
 Example pulp_config.env:
 
@@ -293,3 +330,35 @@ e1c3ae797018   localhost/oci_env/pulp:base   "/init"                  6 seconds 
 ```
 
 Multiple profiles can be selected with `COMPOSE_PROFILE=galaxy_ng/ui:profile2:profile3`. The last profile loaded gets priority on environment variables. Each `compose.yaml` is added additively, and subsquent profles can modify the services from previous profiles.
+
+## How it Works
+
+At it's core, the oci-env command launches a predictable set of containers with a CLI interface to communicate with them. Thes containers are launched by taking advantage of a feature in docker and podman compose that allow multiple compose.yaml files to be selected via the `-f` flag. The command that `oci-env` runs can be viewed with the `-v` flag:
+
+```
+oci-env -v compose up
+Running command in container: docker-compose -p oci_env -f /Users/dnewswan/code/hub/oci_env/.compiled/oci_env/base_compose.yaml -f /Users/dnewswan/code/hub/oci_env/.compiled/oci_env/galaxy_ui_compose.yaml up
+```
+
+Since not all compose runtimes support variable interpolation, oci-env handles that by itself. The compose.yaml files provided by all of the plugins are gathered up and the variables defined in your `compose.env` file are substituted using python's `str.format()` command and placed in the `.compiled/<COMPOSE_PROJECT_NAME>/` directory. This directory contains all the information for the running instance of your dev enviornment:
+
+```
+(venv) dnewswan-mac:oci_env dnewswan$ tree .compiled/
+.compiled/
+├── ci
+│  ├── base_compose.yaml
+│  ├── combined.env
+│  └── init.sh
+└── oci_env
+    ├── base_compose.yaml
+    ├── combined.env
+    ├── galaxy_ui_compose.yaml
+    └── init.sh
+```
+
+`.compiled/` contains all your compose files (with the correct variable substitutions) as well as an `init.sh` script that launches each profile's init.sh script and a combined.env file which combines all the pulp_config.env files into one and performs variable substitution. The `combined.env` file is then loaded into the pulp container as an environment variable, and `init.sh` is run once the container has initialized.
+
+Once all of the information here is compiled, `oci-env` launches the container runtime and mounts the following directories:
+
+- oci_env is mounted into `/opt/oci_env/`. This creates a predictable location to launch scripts provided by oci_env (such as `/opt/oci_env/base/container_scripts/run_functional_tests.sh`)
+- your source code directory is mountent into `/opt/src/`. This provies a predictable location to find plugin source code (such as `/src/pulpcore/`).

@@ -20,6 +20,7 @@ from oci_env.utils import (
 def get_parser():
     parser = argparse.ArgumentParser(description='Pulp OCI image developer environment.')
     parser.add_argument('-v', action='store_true', dest='is_verbose', help="Print extra debug information.")
+    parser.add_argument('-e', type=str, default="", dest='env_file', help="Specify an environment file to use other than the default.")
 
     subparsers = parser.add_subparsers()
 
@@ -111,7 +112,7 @@ def main():
         parser.print_help()
         exit()
 
-    client = Compose(args.is_verbose)
+    client = Compose(args.is_verbose, args.env_file)
     try:
         args.func(args, client)
     except KeyboardInterrupt:

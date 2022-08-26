@@ -4,21 +4,20 @@ version: "3.7"
 services:
   _base:
     build:
-      context: "{COMPOSE_CONTEXT}/base/"
+      context: "{OCI_ENV_DIR}/base/"
       dockerfile: "Dockerfile"
-    image: "localhost/oci_env/pulp:base{DEV_IMAGE_SUFFIX}"
+    image: "localhost/oci_env/pulp:base"
     entrypoint: "/bin/true"
 
   pulp:
-    image: "localhost/oci_env/pulp:base{DEV_IMAGE_SUFFIX}"
+    image: "localhost/oci_env/pulp:base"
     cap_add:
       - SYS_PTRACE
     env_file:
-      - "{COMPOSE_CONTEXT}/.compiled/combined.env"
-      - "{COMPOSE_CONTEXT}/.compose.env"
+      - "{OCI_ENV_DIR}/.compiled/{COMPOSE_PROJECT_NAME}/combined.env"
+      - "{OCI_ENV_CONFIG_FILE}"
     environment:
       - "DEV_SOURCE_PATH={DEV_SOURCE_PATH}"
-      - "COMPOSE_PROFILE={COMPOSE_PROFILE}"
       - "DJANGO_SUPERUSER_USERNAME={DJANGO_SUPERUSER_USERNAME}"
       - "DJANGO_SUPERUSER_PASSWORD={DJANGO_SUPERUSER_PASSWORD}"
       - "API_HOST={API_HOST}"
@@ -26,7 +25,7 @@ services:
       - "API_PROTOCOL={API_PROTOCOL}"
       - "NGINX_PORT={NGINX_PORT}"
       - "NGINX_SSL_PORT={NGINX_SSL_PORT}"
-      - "OCI_ENV_DIRECTORY={OCI_ENV_DIRECTORY}"
+      - "COMPOSE_PROJECT_NAME={COMPOSE_PROJECT_NAME}"
       - S6_BEHAVIOUR_IF_STAGE2_FAILS=0
 
     ports:
@@ -34,15 +33,16 @@ services:
     depends_on:
       - _base
     volumes:
-      - "{COMPOSE_CONTEXT}/..:/src:z"
+      - "{SRC_DIR}:/src:z"
+      - "{OCI_ENV_DIR}:/opt/oci_env:z"
       - "oci_pulp:/var/lib/pulp"
       - "oci_redis_data:/data"
       - "oci_pg_data:/var/lib/pgsql"
 
 volumes:
   oci_pulp:
-    name: "{COMPOSE_PROJECT_NAME}_pulp{DEV_VOLUME_SUFFIX}"
+    name: "{COMPOSE_PROJECT_NAME}_pulp"
   oci_pg_data:
-    name: "{COMPOSE_PROJECT_NAME}_pg_data{DEV_VOLUME_SUFFIX}"
+    name: "{COMPOSE_PROJECT_NAME}_pg_data"
   oci_redis_data:
-    name: "{COMPOSE_PROJECT_NAME}_redis_data{DEV_VOLUME_SUFFIX}"
+    name: "{COMPOSE_PROJECT_NAME}_redis_data"

@@ -117,7 +117,7 @@ def pulpcore_manager(args, client):
 
 
 def profile(args, client):
-    src_dir = os.path.abspath(os.path.join(client.config["COMPOSE_CONTEXT"], ".."))
+    src_dir = client.config["SRC_DIR"]
 
     if args.action == "init":
         if args.plugin:
@@ -178,4 +178,4 @@ def profile(args, client):
             with open(os.path.join(profile_path, "README.md"), "r")as f:
                 print(f.read())
         except FileNotFoundError:
-            exit_with_error(f"{args.profile} doesn't have a READEM.md")
+            exit_with_error(f"{args.profile} doesn't have a README.md")

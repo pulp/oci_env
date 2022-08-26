@@ -3,7 +3,7 @@ version: "3.7"
 services:
   test:
     build:
-      context: "{COMPOSE_CONTEXT}/profiles/_test/"
+      context: "{OCI_ENV_DIR}/profiles/_test/"
       dockerfile: "Dockerfile"
     ports:
-      - "8002:80"
+      - "{SECOND_SERVICE_PORT}:80"

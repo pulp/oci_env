@@ -13,4 +13,4 @@ export PULP_SETTINGS /etc/pulp/settings.py
 export HOME /var/lib/pulp/
 
 # TODO: Modify OCI base image to allow for auto reload to be configurable so we don't have to override this.
-/usr/local/bin/gunicorn pulpcore.app.wsgi:application --bind "127.0.0.1:24817" --name pulp-api --access-logfile - --access-logformat "pulp [%({correlation-id}o)s]: %(h)s %(l)s %(u)s %(t)s \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\"" --reload-extra-file /src/oci_env/.compose.env --reload
+/usr/local/bin/gunicorn pulpcore.app.wsgi:application --bind "127.0.0.1:24817" --name pulp-api --access-logfile - --access-logformat "pulp [%({correlation-id}o)s]: %(h)s %(l)s %(u)s %(t)s \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\"" --reload

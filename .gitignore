@@ -1,6 +1,7 @@
 .compiled
 db_snapshots
 profiles/*_local/
+*compose.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -35,7 +36,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.compose.env
 
 # Unit test / coverage reports
 htmlcov/
