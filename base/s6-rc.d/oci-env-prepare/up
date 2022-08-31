@@ -1,0 +1,3 @@
+#!/usr/bin/execlineb -P
+
+bash /utils.sh init_container
