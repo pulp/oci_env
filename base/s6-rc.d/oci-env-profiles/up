@@ -1,5 +1,3 @@
 #!/usr/bin/execlineb -P
 
-with-contenv
-
 bash /src/oci_env/.compiled/init.sh

@@ -1,6 +1,0 @@
-#!/usr/bin/execlineb -P
-
-with-contenv
-
-# TODO make this use execline instead of calling bash
-bash /utils.sh install_local_deps

@@ -83,7 +83,7 @@ def parse_profiles(config):
             "path": os.path.join(path, "base"),
             "name": "base",
             "container_path": os.path.join(
-                "src",
+                "/src",
                 oci_dir,
                 "base"
             )
@@ -111,7 +111,7 @@ def parse_profiles(config):
             "path": profile_path,
             "name": profile,
             "container_path": os.path.join(
-                "src",
+                "/src",
                 plugin,
                 "profiles",
                 name,

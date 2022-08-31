@@ -40,4 +40,19 @@ create_super_user() {
     pulpcore-manager createsuperuser --no-input --email admin@example.com
 }
 
+set_nginx_port() {
+    echo "setting nginx port"
+    /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/nginx.conf
+
+    if [[ -f /etc/nginx/ssl_nginx.conf ]]; then
+        /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/ssl_nginx.conf
+        /usr/bin/sed -i s/listen\ 443/listen\ "${NGINX_SSL_PORT}"/g /etc/nginx/ssl_nginx.conf
+    fi
+}
+
+init_container() {
+    install_local_deps
+    set_nginx_port
+}
+
 $1
