@@ -6,6 +6,9 @@ import pathlib
 def get_oci_env_path():
     return os.environ.get("OCI_ENV_PATH", os.getcwd())
 
+def exit_with_error(msg):
+    print(msg)
+    exit(1)
 
 def read_env_file(path):
     """
@@ -22,8 +25,7 @@ def read_env_file(path):
                     result[key.strip("' \"")] = val.strip("' \"\n")
 
     except FileNotFoundError:
-        print(f"No .compose.env file found in {path}.")
-        exit(1)
+        exit_with_error(f"No .compose.env file found in {path}.")
 
     return result
 
@@ -104,8 +106,7 @@ def parse_profiles(config):
             profile_path = os.path.join(path, "profiles", name)
 
         if not os.path.isdir(profile_path):
-            print(f"{profile} from COMPOSE_PROFILE does not exist at {profile_path}")
-            exit(1)
+            exit_with_error(f"{profile} from COMPOSE_PROFILE does not exist at {profile_path}")
 
         profile_paths.append({
             "path": profile_path,
@@ -150,12 +151,11 @@ def parse_profiles(config):
                     try:
                         env_output.append(line.strip().format(**config))
                     except KeyError as e:
-                        print(
+                        exit_with_error(
                             f"{env_file} contains variable {e}, which is not "
                             "defined in your .compose.env. This value is required to "
                             "be set."
                         )
-                        exit(1)
         except FileNotFoundError:
             pass
 
@@ -167,13 +167,11 @@ def parse_profiles(config):
                 try:
                     data = data.format(**config)
                 except KeyError as e:
-                    print(
+                    exit_with_error(
                         f"{compose_file} contains variable {e}, which is not "
                         "defined in your .compose.env. This value is required to "
                         "be set."
                     )
-
-                    exit(1)
 
                 compose_file = profile["name"].replace("/", "_")
                 compose_file = compose_file + "_compose.yaml"
@@ -196,8 +194,7 @@ def parse_profiles(config):
                         continue
 
                     if req_profile not in config["COMPOSE_PROFILE"].split(profile["name"])[0]:
-                        print(f"\"{req_profile}\" is required to be in your COMPOSE_PROFILE config before \"{profile['name']}\"")
-                        exit(1)
+                        exit_with_error(f"\"{req_profile}\" is required to be in your COMPOSE_PROFILE config before \"{profile['name']}\"")
 
         except FileNotFoundError:
             pass

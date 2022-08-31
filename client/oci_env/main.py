@@ -9,7 +9,7 @@ from oci_env.commands import (
     test,
     generate_client,
     pulpcore_manager,
-    init_profile
+    profile
 )
 
 from oci_env.utils import (
@@ -30,7 +30,7 @@ def get_parser():
     parse_test_command(subparsers)
     parse_generate_client_command(subparsers)
     parse_pulpcore_manager_command(subparsers)
-    parse_init_profile_command(subparsers)
+    parse_profile_command(subparsers)
 
     return parser
 
@@ -85,11 +85,22 @@ def parse_pulpcore_manager_command(subparsers):
     parser.set_defaults(func=pulpcore_manager)
 
 
-def parse_init_profile_command(subparsers):
-    parser = subparsers.add_parser('init-profile', help='Create a new OCI Env profile.')
-    parser.add_argument('-p', type=str, dest='plugin', default="", help="Plugin to add the new profile to. If none is specified this will be added to oci_env/profiles.")
-    parser.add_argument('profile_name', nargs="?", help='Nome of the profile.')
-    parser.set_defaults(func=init_profile)
+def parse_profile_command(subparsers):
+    parser = subparsers.add_parser('profile', help='View and manage OCI Env profiles.')
+
+    sub = parser.add_subparsers()
+
+    ls = sub.add_parser('ls', help="View profiles")
+    ls.set_defaults(func=profile, action="ls")
+
+    init = sub.add_parser('init', help="Create a new OCI Env profile.")
+    init.add_argument('-p', type=str, dest='plugin', default="", help="Plugin to add the new profile to. If none is specified this will be added to oci_env/profiles.")
+    init.add_argument('profile_name', nargs="?", help='Name of the profile.')
+    init.set_defaults(func=profile, action="init")
+
+    docs = sub.add_parser('docs', help="View profile documentation.")
+    docs.add_argument('profile', nargs="?", help='Profile to view.')
+    docs.set_defaults(func=profile, action="docs")
 
 
 def main():

@@ -6,7 +6,7 @@ import pathlib
 
 from urllib import request
 
-from oci_env.utils import exit_if_failed
+from oci_env.utils import exit_if_failed, exit_with_error
 from oci_env.templates import profile_templates
 
 
@@ -47,8 +47,7 @@ def db(args, client):
 
             time.sleep(5)
         
-        print("Failed to restart")
-        exit(1)
+        exit_with_error("Failed to restart")
 
     else:
         raise Exception(f'db {args.action} not implemented')
@@ -63,8 +62,7 @@ def shell(args, client):
     elif args.shell == "db":
         cmd = ["pulpcore-manager", "dbshell"]
     else:
-        print("Unsupported shell")
-        exit(1)
+        exit_with_error("Unsupported shell")
 
     client.exec(cmd, interactive=True)
 
@@ -118,29 +116,66 @@ def pulpcore_manager(args, client):
     client.exec(["pulpcore-manager"] + args.command, interactive=True)
 
 
-def init_profile(args, client):
-    if args.plugin:
-        profiles_dir = os.path.abspath(
-            os.path.join(client.path, "..", args.plugin, "profiles")
-        )
-        profile_name = f"{args.plugin}/{args.profile_name}"
-    else:
-        profiles_dir = os.path.join(client.path, "profiles")
-        profile_name = args.profile_name
+def profile(args, client):
+    src_dir = os.path.abspath(os.path.join(client.config["COMPOSE_CONTEXT"], ".."))
 
-    new_profile_dir = os.path.join(profiles_dir, args.profile_name)
+    if args.action == "init":
+        if args.plugin:
+            profiles_dir = os.path.join(src_dir, args.plugin, "profiles")
+            profile_name = f"{args.plugin}/{args.profile_name}"
+        else:
+            profiles_dir = os.path.join(client.path, "profiles")
+            profile_name = args.profile_name
 
-    pathlib.Path(profiles_dir).mkdir(exist_ok=True)
+        new_profile_dir = os.path.join(profiles_dir, args.profile_name)
 
-    try:
-        pathlib.Path(new_profile_dir).mkdir(exist_ok=False)
-    except FileExistsError:
-        print(f"A profile already exists at {new_profile_dir}")
-        exit(1)
+        pathlib.Path(profiles_dir).mkdir(exist_ok=True)
 
-    for template in profile_templates:
-        with open(os.path.join(new_profile_dir, template["file"]), "x") as f:
-            f.write(template["template"].format(profile_name=profile_name))
+        try:
+            pathlib.Path(new_profile_dir).mkdir(exist_ok=False)
+        except FileExistsError:
+            print(f"A profile already exists at {new_profile_dir}")
+            exit_with_error(1)
 
-    print(f"New profile \"{profile_name}\" successfully created at: {new_profile_dir}")
-    print(f"To use it set \"COMPOSE_PROFILE={profile_name}\"")
+        for template in profile_templates:
+            with open(os.path.join(new_profile_dir, template["file"]), "x") as f:
+                f.write(template["template"].format(profile_name=profile_name))
+
+        print(f"New profile \"{profile_name}\" successfully created at: {new_profile_dir}")
+        print(f"To use it set \"COMPOSE_PROFILE={profile_name}\"")
+
+    elif args.action == "ls":
+        plugins = []
+        for f in os.listdir(src_dir):
+            if os.path.isdir(os.path.join(src_dir, f)):
+                plugins.append(f)
+        
+        for p in plugins:
+            profile_dir = os.path.join(src_dir, p, "profiles")
+            if not  os.path.isdir(profile_dir):
+                continue
+
+            print(f"Plugin: {p}")
+            for f in os.listdir(profile_dir):
+                if os.path.isdir(os.path.join(profile_dir, f)):
+                    if p == "oci_env":
+                        print(f"  {f}")
+                    else:
+                        print(f"  {p}/{f}")
+
+    elif args.action == "docs":
+        if "/" in args.profile:
+            plugin, profile = args.profile.split("/", maxsplit=1)
+        else:
+            plugin = "oci_env"
+            profile = args.profile
+
+        profile_path = os.path.join(src_dir, plugin, "profiles", profile)
+        if not os.path.isdir(profile_path):
+            exit_with_error(f"{args.profile} doesn't exist")
+
+        try:
+            with open(os.path.join(profile_path, "README.md"), "r")as f:
+                print(f.read())
+        except FileNotFoundError:
+            exit_with_error(f"{args.profile} doesn't have a READEM.md")
