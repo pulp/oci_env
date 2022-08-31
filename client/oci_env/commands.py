@@ -31,7 +31,6 @@ def db(args, client):
                 args=None,
                 interactive=True)
         )
-        client.compose_command(["restart"])
 
         for i in range(10):
             print(f"Waiting for API to restart (attempt {i+1} of 10)")
@@ -42,7 +41,7 @@ def db(args, client):
             except:
                 pass
 
-            time.sleep(10)
+            time.sleep(5)
         
         print("Failed to restart")
         exit(1)
