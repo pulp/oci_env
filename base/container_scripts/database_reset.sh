@@ -11,3 +11,4 @@ yes yes | pulpcore-manager reset_db --user postgres
 # restart the servicees
 echo "$SERVICES" | xargs -I {} s6-rc -u change {}
 s6-rc -u change nginx
+bash /src/oci_env/.compiled/init.sh
