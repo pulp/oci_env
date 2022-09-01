@@ -104,6 +104,15 @@ jobs:
     
       - name: Test profile custom compose definitions
         run: curl localhost:8002 | grep test
+      
+      - name: Print settings 
+        run: oci-env exec dynaconf list
+
+      - name: Pass service name to exec
+        run: oci-env exec -s pulp ls
+
+      - name: Pass service name + number to exec
+        run: oci-env exec -s pulp_1 ls
 
       - name: Print server logs
         if: always()
