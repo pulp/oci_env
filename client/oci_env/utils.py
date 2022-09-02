@@ -143,7 +143,7 @@ def parse_profiles(config):
 
         # Combine all of the pulp_config.env files into .compiled/combined.env. Format
         # all the {VAR} templates.
-        try: 
+        try:
             with open(env_file, "r") as f:
                 for line in f:
                     try:
@@ -159,7 +159,7 @@ def parse_profiles(config):
             pass
 
         # Copy any compose files into .compiled and format any variables in them.
-        try: 
+        try:
             with open(compose_file, "r") as f:
                 data = f.read()
 
@@ -236,6 +236,54 @@ class Compose:
         else:
             return subprocess.run(cmd, capture_output=pipe_output)
 
+    def container_name(self, service=None):
+        """Docker compose name containers using `-` while podman uses `_`
+
+        Underlying bash code:
+            binary ps -q --filter name=oci_env
+            --format '{{.Names}}' | grep env | grep -E '.1$'
+        """
+        binary = self.config["COMPOSE_BINARY"]
+        service = service or self.config["API_CONTAINER"]
+        project_name = self.config['COMPOSE_PROJECT_NAME']
+
+        def _exit_no_container_found():
+            service_name = service if service[-1].isdigit() else f"{service}_1"
+            name = f"{project_name}_{service_name}"
+            print(
+                f"Could not find a running container named: {name} \n"
+                f"instead of {service!r} did you mean 'pulp' or 'ui'?\n"
+                "Run `oci-env compose ps` to see all running containers."
+            )
+            exit(1)
+
+        def _service_containers():
+            """# Grep for the service name. e.g: pulp"""
+            return subprocess.Popen(
+                ("grep", service),
+                stdin=running_containers.stdout,
+                stdout=subprocess.PIPE
+            )
+
+        # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
+        cmd = [binary, "ps", "-q", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
+        running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+        # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
+        if service[-1].isdigit():
+            container_name = _service_containers().stdout.read().decode("utf-8").strip().split("\n")[0]
+            if service in container_name:
+                return container_name
+
+        # Else grep only the container ending with `_1` or `-1` (the main service)
+        try:
+            return subprocess.check_output(
+                ("grep", '-E', ".1$"),
+                stdin=_service_containers().stdout
+            ).decode("utf-8").strip().split("\n")[0]
+        except subprocess.CalledProcessError:
+            _exit_no_container_found()
+
     def exec(self, args, service=None, interactive=False, pipe_output=False):
         """
         Execute a script in a running container using podman or docker.
@@ -245,17 +293,14 @@ class Compose:
         differs between podman-compose and docker-compose.
         """
         service = service or self.config["API_CONTAINER"]
-        project_name = self.config["COMPOSE_PROJECT_NAME"]
         binary = self.config["COMPOSE_BINARY"]
-
-        container = f"{project_name}_{service}_1"
 
         # docker fails on systems with no interactive CLI. This tells docker
         # to use a pseudo terminal when no CLI is available.
         if os.getenv("COMPOSE_INTERACTIVE_NO_CLI", "0") == "1":
-            cmd = [binary, "exec", container] + args
+            cmd = [binary, "exec", self.container_name(service)] + args
         else:
-            cmd = [binary, "exec", "-it", container] + args
+            cmd = [binary, "exec", "-it", self.container_name(service)] + args
 
         if self.is_verbose:
             print(f"Running command in container: {' '.join(cmd)}")
@@ -272,7 +317,7 @@ class Compose:
         """
 
         return self.exec_container_script("get_dynaconf_var.sh", args=[name], pipe_output=True).stdout.decode().strip()
-    
+
     def exec_container_script(self, script, args=None, interactive=False, pipe_output=False):
         """
         Executes a script from the base/container_scripts/ directory in the container.
