@@ -79,7 +79,7 @@ def test(args, client):
         exit_if_failed(
             client.exec_container_script(
                 f"run_{args.test}_tests.sh",
-                args=[args.plugin] + args.args,
+                args=[args.plugin, args.mode, args.key, args.build] + args.args,
                 interactive=True)
         )
 

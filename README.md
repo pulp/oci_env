@@ -164,6 +164,26 @@ oci-env test -i -p PLUGIN_NAME unit
 oci-env test -p PLUGIN_NAME unit
 ```
 
+### Integration
+
+```bash
+# Install the integration test dependencies for a plugin and run it.
+oci-env test -i -p PLUGIN_NAME integration
+
+# Run the integration tests for a plugin without installing test dependencies.
+oci-env test -p PLUGIN_NAME integration
+
+# When running user can specify extra pytest arguments such as
+# mark decorator
+oci-env test -p PLUGIN_NAME integration -m api_ui
+
+# select build (standalone, standalone-rbac, standalone-community, standalone-ldap, insights)
+oci-env test -p PLUGIN_NAME integration -b standalone
+
+# specific test
+oci-env test -p PLUGIN_NAME integration -k test_name
+```
+
 ## Profiles
 
 ### Custom Profiles
