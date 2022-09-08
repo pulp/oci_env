@@ -179,10 +179,16 @@ To generate a new profile template run:
 
 ```bash
 # Generate a new profile in oci_env
-oci-env init-profile my_profile
+oci-env profile init my_profile
 
 # Generate a new profile in a plugin repo
-oci-env init-profile -p PLUGIN_NAME my_profile
+oci-env profile init -p PLUGIN_NAME my_profile
+
+# List available profiles
+oci-env profile ls
+
+# Display the README.md for a profile
+oci-env profile docs my_profile
 ```
 
 Each profile goes in it's own directory and can include:
