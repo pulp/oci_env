@@ -114,6 +114,30 @@ jobs:
       - name: Pass service name + number to exec
         run: oci-env exec -s pulp_1 ls
 
+      - name: Test profile generation
+        run: |
+          oci-env profile init _test_profile
+          oci-env profile init -p pulp_file _test_profile
+
+          # Test that files were created correctly
+          ls oci_env/profiles/_test_profile/ | grep README.md
+          ls oci_env/profiles/_test_profile/ | grep init.sh
+          ls oci_env/profiles/_test_profile/ | grep pulp_config.env
+          ls oci_env/profiles/_test_profile/ | grep compose.yaml
+          ls oci_env/profiles/_test_profile/ | grep profile_requirements.txt
+
+          ls pulp_file/profiles/_test_profile/ | grep README.md
+          ls pulp_file/profiles/_test_profile/ | grep init.sh
+          ls pulp_file/profiles/_test_profile/ | grep pulp_config.env
+          ls pulp_file/profiles/_test_profile/ | grep compose.yaml
+          ls pulp_file/profiles/_test_profile/ | grep profile_requirements.txt
+        
+      - name: Test profile ls
+        run: oci-env profile ls | grep _test_profile
+
+      - name: Test profile docs
+        run: oci-env profile docs _test_profile | grep Usage
+
       - name: Print server logs
         if: always()
         run: oci-env compose logs
