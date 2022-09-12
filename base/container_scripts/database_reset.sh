@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # stop pulp services
-SERVICES=$(s6-rc -a list | egrep ^pulp)
+SERVICES=$(s6-rc -a list | grep -E ^pulp)
 echo "$SERVICES" | xargs -I {} s6-rc -d change {}
 
 # reset the db and run migrations
-yes yes | pulpcore-manager reset_db --user postgres
+pulpcore-manager reset_db --no-input --user postgres
 /etc/init/postgres-prepare
 
 # restart the servicees
