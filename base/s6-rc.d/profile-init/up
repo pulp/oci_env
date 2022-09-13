@@ -1,0 +1,6 @@
+#!/usr/bin/execlineb -P
+
+with-contenv
+
+execline-cd /
+bash /src/oci_env/.compiled/init.sh
