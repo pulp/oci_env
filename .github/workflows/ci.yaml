@@ -1,6 +1,6 @@
 ---
 name: Integration tests
-on: 
+on:
   pull_request:
     branches:
       - '**'
@@ -13,10 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env:
-          - TEST: docker
-          - TEST: podman
-    runs-on: ubuntu-latest
+        include:
+          - os: ubuntu-latest
+            TEST: docker
+          - os: ubuntu-latest
+            TEST: podman
+          - os: macos-12
+            TEST: docker
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -28,7 +32,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "TEST=${{ matrix.env.TEST }}" >> $GITHUB_ENV
+          echo "TEST=${{ matrix.TEST }}" >> $GITHUB_ENV
           echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
           echo "COMPOSE_INTERACTIVE_NO_CLI=1" >> $GITHUB_ENV
 
@@ -39,19 +43,23 @@ jobs:
           git clone --depth 1 https://github.com/pulp/pulp-openapi-generator.git
 
       - name: Install podman compose
-        if: ${{ matrix.env.TEST == 'podman' }}
+        if: matrix.TEST == 'podman' && matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
           sudo apt install -y httpie podman
           sudo pip install podman-compose
           podman --version
-  
-      - name: Install docker compose
-        if: ${{ matrix.env.TEST == 'docker' }}
+
+      - name: (Ubuntu) Install docker compose
+        if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
           sudo curl -fsSL https://get.docker.com -o get-docker.sh
           sudo sh ./get-docker.sh
+
+      - name: (Mac) Install docker compose
+        if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
+        uses: docker-practice/actions-setup-docker@1.0.11
 
       - name: setup .compose.env files
         run: |
@@ -82,7 +90,7 @@ jobs:
         run: |
           curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
           curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulp-file
-      
+
       - name: Test functional tests
         run: |
           oci-env -v generate-client -i
@@ -101,18 +109,23 @@ jobs:
 
       - name: Test profile env vars
         run: oci-env exec printenv | grep hello2
-    
+
       - name: Test profile custom compose definitions
         run: curl localhost:8002 | grep test
-      
-      - name: Print settings 
+
+      - name: Print settings
         run: oci-env exec dynaconf list
 
       - name: Pass service name to exec
         run: oci-env exec -s pulp ls
 
       - name: Pass service name + number to exec
-        run: oci-env exec -s pulp_1 ls
+        run: |
+          if [[ -f "/Applications/Docker.app/Contents/Resources/bin/docker" ]]; then
+            oci-env exec -s pulp-1 ls
+          else
+            oci-env exec -s pulp_1 ls
+          fi
 
       - name: Test profile generation
         run: |
@@ -131,7 +144,7 @@ jobs:
           ls pulp_file/profiles/_test_profile/ | grep pulp_config.env
           ls pulp_file/profiles/_test_profile/ | grep compose.yaml
           ls pulp_file/profiles/_test_profile/ | grep profile_requirements.txt
-        
+
       - name: Test profile ls
         run: oci-env profile ls | grep _test_profile
 
