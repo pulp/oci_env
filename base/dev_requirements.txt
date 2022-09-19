@@ -3,3 +3,4 @@ ipdb
 epdb
 pydevd_pycharm
 django-extensions
+pulp-cli
