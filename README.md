@@ -32,6 +32,9 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 
     The OCI env project should be in the same directory as any pulp plugins you wish to run.
 
+    Note, the `/src/` folder in the container is the parent folder containing the `oci_env` and all
+    plugin checkouts on the container host.
+
 3. Define your `.compose.env` file.
 
     `cp .compose.env.example .compose.env`
