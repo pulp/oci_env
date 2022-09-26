@@ -16,6 +16,8 @@ services:
 
   pulp:
     image: "localhost/oci_env/pulp:base{DEV_IMAGE_SUFFIX}"
+    cap_add:
+      - SYS_PTRACE
     tmpfs:
       - "/var/lib/pulp/artifact"
       - "/var/lib/pulp/scripts"
