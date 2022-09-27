@@ -319,9 +319,6 @@ class Compose:
         else:
             cmd.extend(["-it", self.container_name(service)] + args)
 
-        #if env:
-        #    import epdb; epdb.st()
-
         if self.is_verbose:
             print(f"Running command in container: {' '.join(cmd)}")
 
