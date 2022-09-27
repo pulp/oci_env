@@ -297,7 +297,7 @@ class Compose:
         except subprocess.CalledProcessError:
             _exit_no_container_found()
 
-    def exec(self, args, service=None, interactive=False, pipe_output=False):
+    def exec(self, args, service=None, interactive=False, pipe_output=False, env=None):
         """
         Execute a script in a running container using podman or docker.
 
@@ -308,12 +308,19 @@ class Compose:
         service = service or self.config["API_CONTAINER"]
         binary = self.config["COMPOSE_BINARY"]
 
+        cmd = [binary, "exec"]
+        if env:
+            for k, v in env.items():
+                cmd.extend(['-e', f'{k}="{v}"'])
         # docker fails on systems with no interactive CLI. This tells docker
         # to use a pseudo terminal when no CLI is available.
         if os.getenv("COMPOSE_INTERACTIVE_NO_CLI", "0") == "1":
-            cmd = [binary, "exec", self.container_name(service)] + args
+            cmd.extend([self.container_name(service)] + args)
         else:
-            cmd = [binary, "exec", "-it", self.container_name(service)] + args
+            cmd.extend(["-it", self.container_name(service)] + args)
+
+        #if env:
+        #    import epdb; epdb.st()
 
         if self.is_verbose:
             print(f"Running command in container: {' '.join(cmd)}")
@@ -331,7 +338,7 @@ class Compose:
 
         return self.exec_container_script("get_dynaconf_var.sh", args=[name], pipe_output=True).stdout.decode().strip()
 
-    def exec_container_script(self, script, args=None, interactive=False, pipe_output=False):
+    def exec_container_script(self, script, args=None, interactive=False, pipe_output=False, env=None):
         """
         Executes a script from the base/container_scripts/ directory in the container.
         """
@@ -340,4 +347,4 @@ class Compose:
         script_path = f"/src/{self.config['OCI_ENV_DIRECTORY']}/base/container_scripts/{script}"
         cmd = ["bash", script_path] + args
 
-        return self.exec(cmd, interactive=interactive, pipe_output=pipe_output)
+        return self.exec(cmd, interactive=interactive, pipe_output=pipe_output, env=env)

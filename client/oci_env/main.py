@@ -67,6 +67,12 @@ def parse_test_command(subparsers):
     parser.add_argument('test', choices=["integration", "functional", "unit", "lint"])
     parser.add_argument('-i', action='store_true', dest='install_deps', help="Install the python dependencies for the selected test instead of running it. If -p is not specified this will install all the test dependencies for each plugin in DEV_SOURCE_PATH.")
     parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test. Tests won't run unless this is specified.")
+    parser.add_argument(
+        '--clean-venv',
+        action='store_true',
+        dest='clean_venv',
+        help="Clean up the virtualenv after tests complete"
+    )
     parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to pytest.')
     parser.set_defaults(func=test)
 

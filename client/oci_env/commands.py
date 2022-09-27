@@ -46,7 +46,7 @@ def db(args, client):
                 pass
 
             time.sleep(5)
-        
+
         exit_with_error("Failed to restart")
 
     else:
@@ -81,6 +81,7 @@ def test(args, client):
         exit_if_failed(
             client.exec_container_script(
                 f"run_{args.test}_tests.sh",
+                env={'CLEAN_VENV': True} if args.clean_venv else None,
                 args=[args.plugin] + args.args,
                 interactive=True)
         )
@@ -149,7 +150,7 @@ def profile(args, client):
         for f in os.listdir(src_dir):
             if os.path.isdir(os.path.join(src_dir, f)):
                 plugins.append(f)
-        
+
         for p in plugins:
             profile_dir = os.path.join(src_dir, p, "profiles")
             if not  os.path.isdir(profile_dir):

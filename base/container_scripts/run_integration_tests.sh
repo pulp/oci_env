@@ -7,7 +7,19 @@ set -e
 cd "/src/$PROJECT/"
 
 echo "Setting up venv for testing"
-VENVPATH=/tmp/gng_testing
+if [ -n ${CLEAN_VENV} ]; then
+    # Clean up the venv only if the caller exported CLEAN_VENV
+    # If following TDD practices, cleaning up by default will
+    # waste a lot of time.
+    VENVPATH=$(mktemp -d /tmp/gng_testing_XXXX)
+    rm -rf $VENVPATH
+    trap "rm -rf $VENVPATH" EXIT
+else
+    # Use a consistent path and don't clean up so that tests
+    # can run quickly and repeatedly per TDD.
+    VENVPATH=/tmp/gng_testing
+fi
+
 PIP=${VENVPATH}/bin/pip
 if [[ ! -d $VENVPATH ]]; then
     python3 -m venv $VENVPATH
