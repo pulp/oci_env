@@ -34,7 +34,8 @@ echo "Setting up test data"
 pulpcore-manager shell < dev/common/setup_test_data.py
 
 echo "Setting config vars"
-export HUB_API_ROOT="http://localhost:5001/api/galaxy/"
+API_PREFIX=$(dynaconf get GALAXY_API_PATH_PREFIX)
+export HUB_API_ROOT="${API_PROTOCOL}://${API_HOST}:${API_PORT}${API_PREFIX}"
 
 echo "Starting pytest"
 pytest \
