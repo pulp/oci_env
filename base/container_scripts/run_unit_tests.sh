@@ -8,4 +8,4 @@ source "/src/${OCI_ENV_DIRECTORY}/base/container_scripts/configure_pulp_smash.sh
 
 cd "/src/$PROJECT/"
 
-PULP_DATABASES__default__USER=postgres pytest -r sx --color=yes --pyargs "$PROJECT.tests.unit" "${@:2}"
+sudo -u pulp -E PULP_DATABASES__default__USER=postgres pytest -r sx --color=yes --pyargs "$PROJECT.tests.unit" "${@:2}"
