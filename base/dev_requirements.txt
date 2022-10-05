@@ -1,6 +1,7 @@
 ipython
 ipdb
 epdb
+py-spy
 pydevd_pycharm
 django-extensions
 pulp-cli
