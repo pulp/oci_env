@@ -1,3 +1,4 @@
 #!/usr/bin/execlineb -P
+foreground { s6-echo "Calling /utils.sh init_container" }
 
 bash /utils.sh init_container
