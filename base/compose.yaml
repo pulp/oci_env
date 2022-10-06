@@ -8,21 +8,11 @@ services:
       dockerfile: "Dockerfile"
     image: "localhost/oci_env/pulp:base{DEV_IMAGE_SUFFIX}"
     entrypoint: "/bin/true"
-    tmpfs:
-      - "/var/lib/pulp/artifact"
-      - "/var/lib/pulp/scripts"
-      - "/var/lib/pulp/tmp"
-      - "/tmp/ansible"
 
   pulp:
     image: "localhost/oci_env/pulp:base{DEV_IMAGE_SUFFIX}"
     cap_add:
       - SYS_PTRACE
-    tmpfs:
-      - "/var/lib/pulp/artifact"
-      - "/var/lib/pulp/scripts"
-      - "/var/lib/pulp/tmp"
-      - "/tmp/ansible"
     env_file:
       - "{COMPOSE_CONTEXT}/.compiled/combined.env"
       - "{COMPOSE_CONTEXT}/.compose.env"
