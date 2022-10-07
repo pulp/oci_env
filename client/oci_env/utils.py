@@ -2,6 +2,9 @@ from genericpath import isfile
 import os
 import subprocess
 import pathlib
+import time
+
+from urllib import request
 
 
 def get_oci_env_path():
@@ -393,3 +396,23 @@ class Compose:
         cmd = ["bash", script_path] + args
 
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output)
+
+    def poll(self, attempts, wait_time):
+        api_root = self.get_dynaconf_variable("API_ROOT")
+        status_api = "{}://{}:{}{}api/v3/status/".format(
+            self.config["API_PROTOCOL"],
+            self.config["API_HOST"],
+            self.config["API_PORT"],
+            api_root,
+        )
+
+        for i in range(attempts):
+            print(f"Waiting for API to start (attempt {i+1} of {attempts})")
+            try:
+                if request.urlopen(status_api).code == 200:
+                    print(f"{status_api} online after {(i * wait_time)} seconds")
+                    return
+            except:
+                time.sleep(wait_time)
+
+        exit_with_error(f"Failed to start {status_api} after {attempts * wait_time} seconds")

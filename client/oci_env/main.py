@@ -9,7 +9,8 @@ from oci_env.commands import (
     test,
     generate_client,
     pulpcore_manager,
-    profile
+    profile,
+    poll
 )
 
 from oci_env.utils import (
@@ -32,6 +33,7 @@ def get_parser():
     parse_generate_client_command(subparsers)
     parse_pulpcore_manager_command(subparsers)
     parse_profile_command(subparsers)
+    parse_poll_command(subparsers)
 
     return parser
 
@@ -102,6 +104,13 @@ def parse_profile_command(subparsers):
     docs = sub.add_parser('docs', help="View profile documentation.")
     docs.add_argument('profile', nargs="?", help='Profile to view.')
     docs.set_defaults(func=profile, action="docs")
+
+
+def parse_poll_command(subparsers):
+    parser = subparsers.add_parser('poll', help='Poll the status API until it comes up.')
+    parser.add_argument('--attempts', type=int, dest='attempts', default=10, help="Number of attempts to make.")
+    parser.add_argument('--wait', type=int, dest='wait', default=10, help="Time in seconds to wait between attempts.")
+    parser.set_defaults(func=poll)
 
 
 def main():
