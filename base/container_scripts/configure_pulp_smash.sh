@@ -1,5 +1,5 @@
 export XDG_CONFIG_HOME=/opt/settings/
-PULP_API_ROOT="$(bash "/src/${OCI_ENV_DIRECTORY}/base/container_scripts/get_dynaconf_var.sh" API_ROOT)"
+PULP_API_ROOT="$(bash "/opt/oci_env/base/container_scripts/get_dynaconf_var.sh" API_ROOT)"
 export PULP_API_ROOT
 
 mkdir -p /opt/settings/pulp_smash/

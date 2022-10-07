@@ -4,7 +4,7 @@ declare PROJECT="$1"
 
 set -e
 
-source "/src/${OCI_ENV_DIRECTORY}/base/container_scripts/configure_pulp_smash.sh"
+source "/opt/oci_env/base/container_scripts/configure_pulp_smash.sh"
 
 cd "/src/$PROJECT/"
 

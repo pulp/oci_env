@@ -9,7 +9,8 @@ from oci_env.commands import (
     test,
     generate_client,
     pulpcore_manager,
-    profile
+    profile,
+    poll
 )
 
 from oci_env.utils import (
@@ -20,6 +21,7 @@ from oci_env.utils import (
 def get_parser():
     parser = argparse.ArgumentParser(description='Pulp OCI image developer environment.')
     parser.add_argument('-v', action='store_true', dest='is_verbose', help="Print extra debug information.")
+    parser.add_argument('-e', type=str, default="", dest='env_file', help="Specify an environment file to use other than the default.")
 
     subparsers = parser.add_subparsers()
 
@@ -31,6 +33,7 @@ def get_parser():
     parse_generate_client_command(subparsers)
     parse_pulpcore_manager_command(subparsers)
     parse_profile_command(subparsers)
+    parse_poll_command(subparsers)
 
     return parser
 
@@ -103,6 +106,13 @@ def parse_profile_command(subparsers):
     docs.set_defaults(func=profile, action="docs")
 
 
+def parse_poll_command(subparsers):
+    parser = subparsers.add_parser('poll', help='Poll the status API until it comes up.')
+    parser.add_argument('--attempts', type=int, dest='attempts', default=10, help="Number of attempts to make.")
+    parser.add_argument('--wait', type=int, dest='wait', default=10, help="Time in seconds to wait between attempts.")
+    parser.set_defaults(func=poll)
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -111,7 +121,7 @@ def main():
         parser.print_help()
         exit()
 
-    client = Compose(args.is_verbose)
+    client = Compose(args.is_verbose, args.env_file)
     try:
         args.func(args, client)
     except KeyboardInterrupt:

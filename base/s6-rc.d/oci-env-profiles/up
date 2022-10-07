@@ -1,5 +1,5 @@
 #!/usr/bin/execlineb -P
 
-foreground { s6-echo "Calling /src/oci_env/.compiled/init.sh" }
+foreground { s6-echo "Calling /utils.sh run_profile_init_scripts" }
 
-bash /src/oci_env/.compiled/init.sh
+bash /utils.sh run_profile_init_scripts

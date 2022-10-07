@@ -1,6 +1,10 @@
+from genericpath import isfile
 import os
 import subprocess
 import pathlib
+import time
+
+from urllib import request
 
 
 def get_oci_env_path():
@@ -25,45 +29,63 @@ def read_env_file(path):
                     result[key.strip("' \"")] = val.strip("' \"\n")
 
     except FileNotFoundError:
-        exit_with_error(f"No .compose.env file found in {path}.")
+        exit_with_error(f"Environment file at {path} does not exist.")
 
     return result
 
 
-def get_config():
+def get_config(env_file):
     """
-    Parse the .compose.env file and return any defaults that aren't set there.
+    Parse the compose.env file and return any defaults that aren't set there.
     """
     path = get_oci_env_path()
 
     # These values shouldn't be edited by the user and have the highest precedence.
     constant_vals = {
-        "OCI_ENV_DIRECTORY": path.strip(os.sep).split(os.sep)[-1],
-        "COMPOSE_CONTEXT": path,
+        "OCI_ENV_DIR": path,
+        "OCI_ENV_CONFIG_FILE": env_file,
     }
+
+    user_preferences = read_env_file(env_file)
 
     # default values
     config = {
+        # List of : separated projects to install from source
         "DEV_SOURCE_PATH": "",
+
+        # Directory on the host where the DEV_SOURCE_PATH projects are checked out
+        "SRC_DIR": os.path.abspath(os.path.join(path, "..")),
+
+        # List of : separated profiles to use
         "COMPOSE_PROFILE": "",
+
+        # Django admin credentials
         "DJANGO_SUPERUSER_USERNAME": "admin",
         "DJANGO_SUPERUSER_PASSWORD": "password",
+
+        # API URL
+        "API_PROTOCOL": "http",
         "API_HOST": "localhost",
         "API_PORT": "5001",
-        "API_PROTOCOL": "http",
-        "COMPOSE_PROJECT_NAME": constant_vals["OCI_ENV_DIRECTORY"],
+        
+        # nginx port to run in the container. This defaults to 5001 if nothing is set or
+        # the value of API_HOST if that is set.
+        "NGINX_PORT": user_preferences.get("API_PORT", "5001"),
+        "NGINX_SSL_PORT": "443",
+
+        # Project name to use for compose
+        "COMPOSE_PROJECT_NAME": "oci_env",
+
+        # Container runtime to use.
         "COMPOSE_BINARY": "podman",
+
+        # Containers where the various pulp services are running
         "API_CONTAINER": "pulp",
         "DB_CONTAINER": "pulp",
         "CONTENT_APP_CONTAINER": "pulp",
         "WORKER_CONTAINER": "pulp",
-        "DEV_IMAGE_SUFFIX": "",
-        "DEV_VOLUME_SUFFIX": "",
-        "NGINX_PORT": "5001",
-        "NGINX_SSL_PORT": "443",
     }
 
-    user_preferences = read_env_file(os.path.join(path, ".compose.env"))
 
     # override any defaults that the user set.
     return {**config, **user_preferences, **constant_vals}
@@ -74,19 +96,18 @@ def parse_profiles(config):
     Load the profiles defined in COMPOSE_PROFILE
     """
     profiles = config["COMPOSE_PROFILE"].split(":")
-    path = get_oci_env_path()
-    oci_dir = config["OCI_ENV_DIRECTORY"]
-    compiled_path = os.path.join(path, ".compiled")
+    oci_env_path = get_oci_env_path()
+    src_path = config["SRC_DIR"]
+    compiled_path = os.path.join(oci_env_path, ".compiled", config["COMPOSE_PROJECT_NAME"])
 
-    pathlib.Path(compiled_path).mkdir(exist_ok=True)
+    pathlib.Path(compiled_path).mkdir(parents=True, exist_ok=True)
 
     profile_paths = [
         {
-            "path": os.path.join(path, "base"),
+            "path": os.path.join(oci_env_path, "base"),
             "name": "base",
             "container_path": os.path.join(
-                "/src",
-                oci_dir,
+                "/opt/oci_env",
                 "base"
             )
         },
@@ -98,12 +119,25 @@ def parse_profiles(config):
             plugin, name = profile.split("/", maxsplit=1)
 
             profile_path = os.path.abspath(
-                os.path.join(path, "..", plugin, "profiles", name)
+                os.path.join(src_path, plugin, "profiles", name)
+            )
+            container_path = os.path.join(
+                "/src",
+                plugin,
+                "profiles",
+                name,
             )
         else:
-            plugin = oci_dir
+            plugin = "oci_env"
             name = profile
-            profile_path = os.path.join(path, "profiles", name)
+            profile_path = os.path.join(oci_env_path, "profiles", name)
+
+            # oci env profiles are loaded from "/opt/oci_env"
+            container_path = os.path.join(
+                "/opt/oci_env",
+                "profiles",
+                name
+            )
 
         if not os.path.isdir(profile_path):
             exit_with_error(f"{profile} from COMPOSE_PROFILE does not exist at {profile_path}")
@@ -111,12 +145,7 @@ def parse_profiles(config):
         profile_paths.append({
             "path": profile_path,
             "name": profile,
-            "container_path": os.path.join(
-                "/src",
-                plugin,
-                "profiles",
-                name,
-            )
+            "container_path": container_path
         })
 
     init_script = [
@@ -169,7 +198,7 @@ def parse_profiles(config):
                 except KeyError as e:
                     exit_with_error(
                         f"{compose_file} contains variable {e}, which is not "
-                        "defined in your .compose.env. This value is required to "
+                        "defined in your compose.env. This value is required to "
                         "be set."
                     )
 
@@ -208,6 +237,32 @@ def parse_profiles(config):
     return compose_files
 
 
+def get_env_file(path, env_file):
+    if env_file == "":
+        files = [
+            os.path.join(path, "compose.env"),
+            os.path.join(path, ".compose.env"),
+        ]
+
+        for f in files:
+            if os.path.isfile(f):
+                return f
+        print(f"No compose.env or .compose.env file found in {path}.")
+        
+    else:
+        files = [
+            os.path.abspath(env_file),
+            os.path.join(os.getcwd(), env_file),
+        ]
+
+        for f in files:
+            if os.path.isfile(f):
+                return f
+        print(f"Could not find file {env_file}")
+    
+    exit(1)
+
+
 def exit_if_failed(rc):
     if rc != 0:
         exit(rc)
@@ -218,9 +273,9 @@ class Compose:
     This provides an interface to docker/podman compose for running compose commands
     and executing scripts inside running containers.
     """
-    def __init__(self, is_verbose):
+    def __init__(self, is_verbose, env_file):
         self.path = get_oci_env_path()
-        self.config = get_config()
+        self.config = get_config(get_env_file(self.path, env_file))
         self.compose_files = parse_profiles(self.config)
         self.is_verbose = is_verbose
 
@@ -337,7 +392,30 @@ class Compose:
         """
 
         args = args or []
-        script_path = f"/src/{self.config['OCI_ENV_DIRECTORY']}/base/container_scripts/{script}"
+        script_path = f"/opt/oci_env/base/container_scripts/{script}"
         cmd = ["bash", script_path] + args
 
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output)
+
+    def poll(self, attempts, wait_time):
+        status_api = ""
+
+        for i in range(attempts):
+            print(f"Waiting for API to start (attempt {i+1} of {attempts})")
+            # re request the api root each time because it's not alwasy available until the
+            # app boots
+            api_root = self.get_dynaconf_variable("API_ROOT")
+            status_api = "{}://{}:{}{}api/v3/status/".format(
+                self.config["API_PROTOCOL"],
+                self.config["API_HOST"],
+                self.config["API_PORT"],
+                api_root,
+            )
+            try:
+                if request.urlopen(status_api).code == 200:
+                    print(f"{status_api} online after {(i * wait_time)} seconds")
+                    return
+            except:
+                time.sleep(wait_time)
+
+        exit_with_error(f"Failed to start {status_api} after {attempts * wait_time} seconds")

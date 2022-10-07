@@ -63,7 +63,11 @@ jobs:
 
       - name: setup .compose.env files
         run: |
-          cp oci_env/.github/assets/${TEST}_compose.env oci_env/.compose.env
+          cp oci_env/.github/assets/${TEST}_compose.env oci_env/compose.env
+          cp oci_env/.github/assets/${TEST}_compose.env ${PWD}/custom.env
+          echo "API_PORT=7210" >> ${PWD}/custom.env
+          echo "COMPOSE_PROJECT_NAME=my_2nd_project" >> ${PWD}/custom.env
+          echo "SECOND_SERVICE_PORT=7002" >> ${PWD}/custom.env
 
       - name: setup test profiles
         run: |
@@ -77,10 +81,12 @@ jobs:
         run: |
           oci-env compose build
           oci-env compose up -d
+          oci-env -e custom.env compose up -d
 
       - name: Wait for the stack to spin up
         run: |
-          sleep 100
+          oci-env poll --wait 15 --attempts 30
+          oci-env -e custom.env poll --wait 5 --attempts 5
 
       - name: Test DB Reset
         run: |
@@ -90,6 +96,11 @@ jobs:
         run: |
           curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
           curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulp-file
+
+      - name: Test that the second instance of oci-env is running correctly.
+        run: |
+          curl localhost:7210/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
+          curl localhost:7210/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulp-file
 
       - name: Test functional tests
         run: |
@@ -111,9 +122,11 @@ jobs:
         run: oci-env exec printenv | grep hello2
 
       - name: Test profile custom compose definitions
-        run: curl localhost:8002 | grep test
+        run: |
+          curl localhost:8002 | grep test
+          curl localhost:7002 | grep test
 
-      - name: Print settings
+      - name: Print settings 
         run: oci-env exec dynaconf list
 
       - name: Pass service name to exec
@@ -151,6 +164,10 @@ jobs:
       - name: Test profile docs
         run: oci-env profile docs _test_profile | grep Usage
 
-      - name: Print server logs
+      - name: Print server logs (1st instance)
         if: always()
         run: oci-env compose logs
+
+      - name: Print server logs (2nd instance)
+        if: always()
+        run: oci-env -e custom.env compose logs

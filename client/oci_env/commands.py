@@ -1,10 +1,6 @@
-from multiprocessing.connection import Client
 import subprocess
 import os
-import time
 import pathlib
-
-from urllib import request
 
 from oci_env.utils import exit_if_failed, exit_with_error
 from oci_env.templates import profile_templates
@@ -21,14 +17,6 @@ def exec(args, client):
 def db(args, client):
     action = str(args.action[0])
     if action == 'reset':
-        api_root = client.get_dynaconf_variable("API_ROOT")
-        status_api = "{}://{}:{}{}api/v3/status/".format(
-            client.config["API_PROTOCOL"],
-            client.config["API_HOST"],
-            client.config["API_PORT"],
-            api_root,
-        )
-
         exit_if_failed(
             client.exec_container_script(
                 f"database_reset.sh",
@@ -36,18 +24,7 @@ def db(args, client):
                 interactive=True)
         )
 
-        for i in range(10):
-            print(f"Waiting for API to restart (attempt {i+1} of 10)")
-            try:
-                if request.urlopen(status_api).code == 200:
-                    print("Back online")
-                    return
-            except:
-                pass
-
-            time.sleep(5)
-        
-        exit_with_error("Failed to restart")
+        client.poll(10, 5)
 
     else:
         raise Exception(f'db {args.action} not implemented')
@@ -117,7 +94,7 @@ def pulpcore_manager(args, client):
 
 
 def profile(args, client):
-    src_dir = os.path.abspath(os.path.join(client.config["COMPOSE_CONTEXT"], ".."))
+    src_dir = client.config["SRC_DIR"]
 
     if args.action == "init":
         if args.plugin:
@@ -178,4 +155,7 @@ def profile(args, client):
             with open(os.path.join(profile_path, "README.md"), "r")as f:
                 print(f.read())
         except FileNotFoundError:
-            exit_with_error(f"{args.profile} doesn't have a READEM.md")
+            exit_with_error(f"{args.profile} doesn't have a README.md")
+
+def poll(args, client):
+    client.poll(args.attempts, args.wait)
