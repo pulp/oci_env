@@ -85,7 +85,8 @@ jobs:
 
       - name: Wait for the stack to spin up
         run: |
-          sleep 120
+          python oci_env/.github/assets/poll_for_readiness.py http://localhost:5001/my/custom/api/api/v3/status/
+          python oci_env/.github/assets/poll_for_readiness.py http://localhost:7210/my/custom/api/api/v3/status/
 
       - name: Test DB Reset
         run: |
