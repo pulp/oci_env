@@ -1,3 +1,5 @@
 #!/usr/bin/execlineb -P
 
+foreground { s6-echo "Calling /src/oci_env/.compiled/init.sh" }
+
 bash /src/oci_env/.compiled/init.sh
