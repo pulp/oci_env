@@ -398,16 +398,19 @@ class Compose:
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output)
 
     def poll(self, attempts, wait_time):
-        api_root = self.get_dynaconf_variable("API_ROOT")
-        status_api = "{}://{}:{}{}api/v3/status/".format(
-            self.config["API_PROTOCOL"],
-            self.config["API_HOST"],
-            self.config["API_PORT"],
-            api_root,
-        )
+        status_api = ""
 
         for i in range(attempts):
             print(f"Waiting for API to start (attempt {i+1} of {attempts})")
+            # re request the api root each time because it's not alwasy available until the
+            # app boots
+            api_root = self.get_dynaconf_variable("API_ROOT")
+            status_api = "{}://{}:{}{}api/v3/status/".format(
+                self.config["API_PROTOCOL"],
+                self.config["API_HOST"],
+                self.config["API_PORT"],
+                api_root,
+            )
             try:
                 if request.urlopen(status_api).code == 200:
                     print(f"{status_api} online after {(i * wait_time)} seconds")
