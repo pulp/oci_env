@@ -188,6 +188,9 @@ jobs:
       - name: Test profile docs
         run: oci-env profile docs _test_profile | grep Usage
 
+      - name: Test basic functionality of the sftp_storage profile
+        run: oci_env/.github/assets/test_scripts/sftp_profile_test.sh
+
       - name: Print server logs (1st instance)
         if: always()
         run: oci-env compose logs

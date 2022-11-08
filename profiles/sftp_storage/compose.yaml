@@ -1,0 +1,6 @@
+version: "3.7"
+
+services:
+  sftp_storage:
+    image: atmoz/sftp
+    command: foo:pass:::storage
