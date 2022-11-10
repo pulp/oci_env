@@ -237,7 +237,8 @@ Each profile goes in it's own directory and can include:
 - `compose.yaml`: This is a docker compose file that can define new services or modify the base `pulp` service.
 - `pulp_config.env`: Environment file that defines any settings that the profile needs to run.
 - `init.sh`: Script that gets run when the environment loads. Can be used to initialize data and set up tests. Must be a bash script.
-- `plugin_reqirements.txt`: A list of other profiles that are required to be set in COMPOSE_PROFILE for this profile to function.
+- `profile_reqirements.txt`: A list of other profiles that are required to be set in COMPOSE_PROFILE for this profile to function.
+- `profile_default_config.env`: A list of default variables to use if not specified by the user.
 - `README.md`: Readme file describing what the profile is for and how to use it.
 
 #### Variables
@@ -258,7 +259,7 @@ These variables can be used in `pulp_config.env` and `compose.yaml`:
 
 Variables are templated using pythons `"{VAR}".template(VAR="my_var")` function, so they must be referenced as `{VARIABLE_NAME}` in environment and compose files.
 
-Profiles can use variables outside of this list as well. They are just required to be defined in the user's compose.env file as oci-env cannot provide default values for custom variables.
+Profiles can use variables outside of this list as well. They are just required to be defined in the user's compose.env file or in the profile's (or its parents) `profile_default_config.env` file.
 
 Example pulp_config.env:
 

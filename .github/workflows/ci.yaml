@@ -121,6 +121,11 @@ jobs:
       - name: Test profile env vars
         run: oci-env exec printenv | grep hello2
 
+      - name: Test default variables
+        run: |
+          oci-env exec printenv | grep hi_default
+          oci-env exec printenv | grep howdy_default
+
       - name: Test profile custom compose definitions
         run: |
           curl localhost:8002 | grep test
@@ -151,12 +156,14 @@ jobs:
           ls oci_env/profiles/_test_profile/ | grep pulp_config.env
           ls oci_env/profiles/_test_profile/ | grep compose.yaml
           ls oci_env/profiles/_test_profile/ | grep profile_requirements.txt
+          ls oci_env/profiles/_test_profile/ | grep profile_default_config.env
 
           ls pulp_file/profiles/_test_profile/ | grep README.md
           ls pulp_file/profiles/_test_profile/ | grep init.sh
           ls pulp_file/profiles/_test_profile/ | grep pulp_config.env
           ls pulp_file/profiles/_test_profile/ | grep compose.yaml
           ls pulp_file/profiles/_test_profile/ | grep profile_requirements.txt
+          ls pulp_file/profiles/_test_profile/ | grep profile_default_config.env
 
       - name: Test profile ls
         run: oci-env profile ls | grep _test_profile
