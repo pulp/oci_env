@@ -2,9 +2,11 @@
 
 pulpcore-manager createsuperuser --no-input --email admin@example.com || true
 
+export PULP_API_ROOT="$(bash "/opt/oci_env/base/container_scripts/get_dynaconf_var.sh" API_ROOT)"
+
 if ! pulp --refresh-api status
 then
-  pulp config create --overwrite --base-url "http://localhost:${NGINX_PORT}" --username "${DJANGO_SUPERUSER_USERNAME}" --password "${DJANGO_SUPERUSER_PASSWORD}"
+  pulp config create --overwrite --base-url "http://localhost:${NGINX_PORT}" --api-root "${PULP_API_ROOT}" --username "${DJANGO_SUPERUSER_USERNAME}" --password "${DJANGO_SUPERUSER_PASSWORD}"
   if ! grep -q "_PULP_COMPLETE=bash_source pulp" /root/.bashrc
   then
     echo "eval \"\$(LC_ALL=C _PULP_COMPLETE=bash_source pulp)\"" >> /root/.bashrc
