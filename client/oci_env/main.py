@@ -11,7 +11,8 @@ from oci_env.commands import (
     pulpcore_manager,
     profile,
     poll,
-    pulp
+    edit_env,
+    pulp,
 )
 
 from oci_env.utils import (
@@ -23,6 +24,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description='Pulp OCI image developer environment.')
     parser.add_argument('-v', action='store_true', dest='is_verbose', help="Print extra debug information.")
     parser.add_argument('-e', type=str, default="", dest='env_file', help="Specify an environment file to use other than the default.")
+    parser.set_defaults(no_init_client=False)
 
     subparsers = parser.add_subparsers()
 
@@ -36,6 +38,7 @@ def get_parser():
     parse_profile_command(subparsers)
     parse_poll_command(subparsers)
     parse_pulp_cli_command(subparsers)
+    parse_edit_env(subparsers)
 
     return parser
 
@@ -107,6 +110,8 @@ def parse_profile_command(subparsers):
     docs.add_argument('profile', nargs="?", help='Profile to view.')
     docs.set_defaults(func=profile, action="docs")
 
+    parser.set_defaults(no_init_client=True)
+
 
 def parse_poll_command(subparsers):
     parser = subparsers.add_parser('poll', help='Poll the status API until it comes up.')
@@ -121,6 +126,17 @@ def parse_pulp_cli_command(subparsers):
     parser.set_defaults(func=pulp)
 
 
+def parse_edit_env(subparsers):
+    parser = subparsers.add_parser(
+        'edit-env', 
+        help=(
+            'Edit your current environment file in vim. To change the default editor, set the '
+            'OCI_ENV_EDITOR environment variable to the path for the binary of your choosing.'
+        )
+    )
+    parser.set_defaults(func=edit_env, no_init_client=True)
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -129,9 +145,15 @@ def main():
         parser.print_help()
         exit()
 
-    client = Compose(args.is_verbose, args.env_file)
     try:
-        args.func(args, client)
+        # Initializing the client generates the .compiled/ directory and performs a lot of
+        # validation that's not necessary for some sub and may cause these commands to fail
+        # when the user has an invalid environment file set up.
+        if args.no_init_client:
+            args.func(args)
+        else:
+            client = Compose(args.is_verbose, args.env_file)
+            args.func(args, client)
     except KeyboardInterrupt:
         print()
         exit(1)

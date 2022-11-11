@@ -2,7 +2,13 @@ import subprocess
 import os
 import pathlib
 
-from oci_env.utils import exit_if_failed, exit_with_error
+from oci_env.utils import (
+    exit_if_failed,
+    exit_with_error,
+    get_oci_env_path,
+    get_env_file,
+    get_config
+)
 from oci_env.templates import profile_templates
 
 
@@ -93,15 +99,17 @@ def pulpcore_manager(args, client):
     client.exec(["pulpcore-manager"] + args.command, interactive=True)
 
 
-def profile(args, client):
-    src_dir = client.config["SRC_DIR"]
+def profile(args):
+    path = get_oci_env_path()
+    config = get_config(get_env_file(path, args.env_file))
+    src_dir = config["SRC_DIR"]
 
     if args.action == "init":
         if args.plugin:
             profiles_dir = os.path.join(src_dir, args.plugin, "profiles")
             profile_name = f"{args.plugin}/{args.profile_name}"
         else:
-            profiles_dir = os.path.join(client.path, "profiles")
+            profiles_dir = os.path.join(path, "profiles")
             profile_name = args.profile_name
 
         new_profile_dir = os.path.join(profiles_dir, args.profile_name)
@@ -164,3 +172,9 @@ def poll(args, client):
 
 def pulp(args, client):
     client.exec(["pulp"] + args.command, interactive=True)
+
+
+
+def edit_env(args):
+    editor = os.getenv("OCI_ENV_EDITOR", "vim")
+    subprocess.call([editor, get_env_file(get_oci_env_path(), args.env_file)])
