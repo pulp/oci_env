@@ -11,7 +11,7 @@ def compose(args, client):
 
 
 def exec(args, client):
-    client.exec(args.command, interactive=True, service=args.service)
+    exit_if_failed(client.exec(args.command, interactive=True, service=args.service))
 
 
 def db(args, client):
@@ -23,7 +23,23 @@ def db(args, client):
                 args=None,
                 interactive=True)
         )
+        client.poll(10, 5)
 
+    elif action == 'snapshot':
+        exit_if_failed(
+            client.exec_container_script(
+                f"db_snapshot.sh",
+                args=[args.filename, ],
+                interactive=True)
+        )
+
+    elif action == 'restore':
+        exit_if_failed(
+            client.exec_container_script(
+                f"db_restore.sh",
+                args=[args.filename, ],
+                interactive=True)
+        )
         client.poll(10, 5)
 
     else:

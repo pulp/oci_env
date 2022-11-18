@@ -2,6 +2,7 @@
 db_snapshots
 profiles/*_local/
 *compose.env
+db_back/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
