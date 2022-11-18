@@ -14,7 +14,7 @@ def exit_with_error(msg):
     print(msg)
     exit(1)
 
-def read_env_file(path):
+def read_env_file(path, exit_on_error=True):
     """
     Read the contents of a .env file into a dictionary.
     """
@@ -29,7 +29,8 @@ def read_env_file(path):
                     result[key.strip("' \"")] = val.strip("' \"\n")
 
     except FileNotFoundError:
-        exit_with_error(f"Environment file at {path} does not exist.")
+        if exit_on_error:
+            exit_with_error(f"Environment file at {path} does not exist.")
 
     return result
 
@@ -160,17 +161,40 @@ def parse_profiles(config):
 
     compose_files = []
 
+    profile_defaults = {}
+
     # Compile the information in the compose profiles into .compiled.
     for profile in profile_paths:
         init_file = os.path.join(profile["path"], "init.sh")
         env_file = os.path.join(profile["path"], "pulp_config.env")
         compose_file = os.path.join(profile["path"], "compose.yaml")
         profile_requirements_file = os.path.join(profile["path"], "profile_requirements.txt")
+        config_defaults_file = os.path.join(profile["path"], "profile_default_config.env")
+
+        # Ensure profile dependencies are in correct order
+        try:
+            with open(profile_requirements_file, "r") as f:
+
+                for line in f:
+                    req_profile = line.strip()
+                    if req_profile.startswith("#") or req_profile == "":
+                        continue
+
+                    if req_profile not in config["COMPOSE_PROFILE"].split(profile["name"])[0]:
+                        exit_with_error(f"\"{req_profile}\" is required to be in your COMPOSE_PROFILE config before \"{profile['name']}\"")
+
+        except FileNotFoundError:
+            pass
 
         # Add any init scripts to .compiled/init.sh.
         if os.path.isfile(init_file):
             script_path = os.path.join(profile['container_path'], "init.sh")
             init_script.append(f"bash {script_path}")
+
+        # Update config used when formatting {VAR} templates with profile's defaults
+        # Ensure user config takes priority, but allows profiles to override their dependencies defaults
+        profile_defaults.update(read_env_file(config_defaults_file, exit_on_error=False))
+        updated_config = {**profile_defaults, **config}
 
         # Combine all of the pulp_config.env files into .compiled/combined.env. Format
         # all the {VAR} templates.
@@ -178,7 +202,7 @@ def parse_profiles(config):
             with open(env_file, "r") as f:
                 for line in f:
                     try:
-                        env_output.append(line.strip().format(**config))
+                        env_output.append(line.strip().format(**updated_config))
                     except KeyError as e:
                         exit_with_error(
                             f"{env_file} contains variable {e}, which is not "
@@ -194,7 +218,7 @@ def parse_profiles(config):
                 data = f.read()
 
                 try:
-                    data = data.format(**config)
+                    data = data.format(**updated_config)
                 except KeyError as e:
                     exit_with_error(
                         f"{compose_file} contains variable {e}, which is not "
@@ -214,25 +238,15 @@ def parse_profiles(config):
         except FileNotFoundError:
             pass
 
-        try:
-            with open(profile_requirements_file, "r") as f:
-
-                for line in f:
-                    req_profile = line.strip()
-                    if req_profile.startswith("#") or req_profile == "":
-                        continue
-
-                    if req_profile not in config["COMPOSE_PROFILE"].split(profile["name"])[0]:
-                        exit_with_error(f"\"{req_profile}\" is required to be in your COMPOSE_PROFILE config before \"{profile['name']}\"")
-
-        except FileNotFoundError:
-            pass
-
     with open(os.path.join(compiled_path, "init.sh"), "w") as f:
         f.write("\n".join(init_script))
 
     with open(os.path.join(compiled_path, "combined.env"), "w") as f:
         f.write("\n".join(env_output))
+
+    # Update config with new profile defaults (a side effect)
+    for key, value in profile_defaults.items():
+        config.setdefault(key, value)
 
     return compose_files
 

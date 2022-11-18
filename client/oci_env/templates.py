@@ -57,6 +57,16 @@ PROFILE_REQUIREMENTS_TEMPLATE = """# List any profiles here that are required fo
 """
 
 
+PROFILE_DEFAULT_CONFIG_TEMPLATE = """# List any default variables that a profile should use if not specified by the user.
+# These variables can be used in the profile's (and its dependents) compose.yaml and pulp_config.env files.
+# This file is not templated, so do not define variables through other variables.
+
+# PLEASE DELETE THIS FILE IF IT's UNMODIFIED.
+
+# my_custom_variable=1234
+"""
+
+
 profile_templates = [
     {
         "file": "README.md",
@@ -77,5 +87,9 @@ profile_templates = [
     {
         "file": "profile_requirements.txt",
         "template": PROFILE_REQUIREMENTS_TEMPLATE
+    },
+    {
+        "file": "profile_default_config.env",
+        "template": PROFILE_DEFAULT_CONFIG_TEMPLATE,
     },
 ]
