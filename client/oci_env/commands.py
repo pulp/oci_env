@@ -179,4 +179,4 @@ def poll(args, client):
 
 
 def pulp(args, client):
-    client.exec(["pulp"] + args.command, interactive=True)
+    exit(client.exec(["pulp"] + args.command, interactive=False).returncode)
