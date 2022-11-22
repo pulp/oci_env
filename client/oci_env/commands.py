@@ -157,5 +157,10 @@ def profile(args, client):
         except FileNotFoundError:
             exit_with_error(f"{args.profile} doesn't have a README.md")
 
+
 def poll(args, client):
     client.poll(args.attempts, args.wait)
+
+
+def pulp(args, client):
+    client.exec(["pulp"] + args.command, interactive=True)
