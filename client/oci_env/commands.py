@@ -176,5 +176,5 @@ def pulp(args, client):
 
 
 def edit_env(args):
-    editor = os.getenv("OCI_ENV_EDITOR", "vim")
+    editor = os.getenv("EDITOR", "vim")
     subprocess.call([editor, get_env_file(get_oci_env_path(), args.env_file)])

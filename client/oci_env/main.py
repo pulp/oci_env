@@ -131,7 +131,7 @@ def parse_edit_env(subparsers):
         'edit-env', 
         help=(
             'Edit your current environment file in vim. To change the default editor, set the '
-            'OCI_ENV_EDITOR environment variable to the path for the binary of your choosing.'
+            'EDITOR environment variable to the path for the binary of your choosing.'
         )
     )
     parser.set_defaults(func=edit_env, no_init_client=True)
