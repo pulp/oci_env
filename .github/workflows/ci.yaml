@@ -109,9 +109,6 @@ jobs:
           if oci-env exec pulp file repository show --name test1; then false; fi
           if oci-env exec pulp file repository show --name test2; then false; fi
 
-      - name: Verify test data is gone
-        run: curl localhost:5001/my/custom/api/api/v3/repositories/file/file/ | jq -r ".versions" | grep pulpcore
-
       - name: Test that the correct plugins are installed and that the API_ROOT was successfully changed.
         run: |
           curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
