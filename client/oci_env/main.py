@@ -61,7 +61,7 @@ def parse_db_command(subparsers):
         type=str,
         default="pulp_backup",
         dest='filename',
-        help=('Back up or restore the database and artifacts to a file in OCI_ENV_PATH/db_back/')
+        help=('Back up or restore the database and artifacts to a file in OCI_ENV_PATH/db_backup/')
     )
     parser.set_defaults(func=db)
 
