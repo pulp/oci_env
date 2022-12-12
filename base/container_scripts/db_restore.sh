@@ -1,8 +1,7 @@
 #!/bin/bash
+set -eu
 
 declare FILENAME="$1"
-
-set -e
 
 # stop pulp services
 SERVICES=$(s6-rc -a list | grep -E ^pulp)
