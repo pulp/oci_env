@@ -88,9 +88,26 @@ jobs:
           oci-env poll --wait 15 --attempts 30
           oci-env -e custom.env poll --wait 5 --attempts 5
 
-      - name: Test DB Reset
+      - name: Create some dummy data with the pulp CLI
+        run: oci-env pulp file repository create --name test1
+      
+      - name: Snapshot the DB
+        run: oci-env db snapshot
+
+      - name: Create some dummy data with the pulp CLI
+        run: oci-env pulp file repository create --name test2
+
+      - name: Test DB restore. Test that test1 exists and test2 doesn't
+        run: | 
+          oci-env db restore
+          oci-env pulp file repository show --name test1
+          if oci-env pulp file repository show --name test2; then false; fi
+
+      - name: Test DB Reset. Test that test1 and test2 are gone
         run: |
           oci-env db reset
+          if oci-env pulp file repository show --name test1; then false; fi
+          if oci-env pulp file repository show --name test2; then false; fi
 
       - name: Test that the correct plugins are installed and that the API_ROOT was successfully changed.
         run: |
