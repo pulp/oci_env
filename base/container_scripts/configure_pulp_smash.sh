@@ -38,6 +38,9 @@ cat > /opt/settings/pulp_smash/settings.json <<EOF
     ],
     "selinux enabled": false,
     "version": "3"
+  },
+  "custom": {
+    "fixtures_origin": "${REMOTE_FIXTURES_ORIGIN}"
   }
 }
 EOF

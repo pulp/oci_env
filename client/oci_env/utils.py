@@ -64,6 +64,9 @@ def get_config(env_file):
         "DJANGO_SUPERUSER_USERNAME": "admin",
         "DJANGO_SUPERUSER_PASSWORD": "password",
 
+        # Test fixtures
+        "REMOTE_FIXTURES_ORIGIN": "https://fixtures.pulpproject.org/",
+
         # API URL
         "API_PROTOCOL": "http",
         "API_HOST": "localhost",
