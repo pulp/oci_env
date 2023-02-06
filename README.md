@@ -188,7 +188,7 @@ Bindings for specific plugins can be regenerated with `oci-env generate-client P
 import pydevd_pycharm
 pydevd_pycharm.settrace('host.containers.internal', port=3013, stdoutToServer=True, stderrToServer=True)`
 ```
-3. Restart all services you need to pick up the code change by running `s6-svc -r /var/run/s6/services/<service_name>`
+3. Restart all services you need to pick up the code change by running `s6-svc -r /var/run/service/<service_name>`
 4. Perform the action that should trigger the code to run.
 
 Please note that `host.containers.internal` points to the wrong interface in `podman` < 4.1. When
