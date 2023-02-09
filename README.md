@@ -70,6 +70,7 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
     The `oci-env compose` command accepts all the same arguments as `podman-compose` or `docker-compose`
 
     By default the API will be served from http://localhost:5001/pulp/api/v3/. You can login with `admin`/`password` by default.
+    E.g.: `http --auth admin:password get http://localhost:5001/pulp/api/v3/status/`
     The api will reload anytime changes are made to any of the `DEV_SOURCE_PATH` projects.
 
     `oci-env compose` accepts all of the arguments that docker and podman compose take. You can also launch the environment in the background with `oci-env compose up -d` and access the logs with `oci-env compose logs -f` if you don't want to run it in the foreground.
