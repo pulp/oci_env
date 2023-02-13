@@ -3,6 +3,9 @@ FROM ghcr.io/pulp/pulp-ci-centos:latest
 # configure S6 to use env variables
 ENV S6_KEEP_ENV=1
 
+# Set XDG_CONFIG_HOME variable for the pulp_smash settings lookup
+ENV XDG_CONFIG_HOME=/opt/settings
+
 COPY dev_requirements.txt /dev_requirements.txt
 RUN pip3 install -r dev_requirements.txt
 
