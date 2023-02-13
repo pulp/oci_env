@@ -95,7 +95,7 @@ def generate_client(args, client):
     env = {**os.environ, **client.config, "PULP_API_ROOT": api_root}
 
     for plugin in plugins:
-        cmd = base_cmd + [plugin, ]
+        cmd = base_cmd + [plugin, args.language]
         if args.is_verbose:
             print(f"Running local command: {' '.join(cmd)}")
 
@@ -142,7 +142,7 @@ def profile(args, client):
         for f in os.listdir(src_dir):
             if os.path.isdir(os.path.join(src_dir, f)):
                 plugins.append(f)
-        
+
         for p in plugins:
             profile_dir = os.path.join(src_dir, p, "profiles")
             if not  os.path.isdir(profile_dir):
