@@ -20,4 +20,4 @@ echo 'Defaults    env_keep += "DJANGO_SETTINGS_MODULE PULP_SETTINGS XDG_CONFIG_H
 
 # Add user pulp to sudoers so tests can use sudo
 echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd
-echo 'usermod -a -G wheel pulp'
+usermod -aG wheel pulp && echo 'Adding the pulp user to the wheel group...'
