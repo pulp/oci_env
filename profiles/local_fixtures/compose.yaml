@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  local_fixtures:
+    image: pulp/pulp-fixtures
+    environment:
+      - BASE_URL={PULP_FIXTURES_URL}
+    ports:
+      - {PULP_FIXTURES_PORT}:{PULP_FIXTURES_PORT}
