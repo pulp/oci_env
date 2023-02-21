@@ -173,6 +173,9 @@ oci-env test -p PLUGIN_NAME functional
 
 Bindings for specific plugins can be regenerated with `oci-env generate-client PLUGIN_NAME`.
 
+Use `--language` parameter to specify the programming language the bindings should be generated for (default: python),
+e.g. `oci-env generate-client -l ruby PLUGIN_NAME`.
+
 #### Debugging functional tests
 
 1. Add "epdb" to the functest_requirements.txt file in your pulp_ansible checkout path.
