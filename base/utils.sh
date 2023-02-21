@@ -42,12 +42,14 @@ create_super_user() {
 
 set_nginx_port() {
     echo "setting nginx port"
-    /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/nginx.conf
+    # the nginx s6 service copies the file from /nginx/nginx.conf, which overwrites our changes,
+    # so we have to change the source file.
+    /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /nginx/nginx.conf
+    /usr/bin/sed -i s/listen\ 443/listen\ "${NGINX_SSL_PORT}"/g /nginx/ssl_nginx.conf
 
-    if [[ -f /etc/nginx/ssl_nginx.conf ]]; then
-        /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/ssl_nginx.conf
-        /usr/bin/sed -i s/listen\ 443/listen\ "${NGINX_SSL_PORT}"/g /etc/nginx/ssl_nginx.conf
-    fi
+    # this is the older command. Leaving this in for backwards compatibility for devs that haven't
+    # updated their images.
+    /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/nginx.conf
 }
 
 init_container() {
