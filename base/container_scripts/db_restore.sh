@@ -2,6 +2,7 @@
 set -eu
 
 declare FILENAME="$1"
+declare MIGRATE="${2-0}"
 
 # stop pulp services
 SERVICES=$(s6-rc -a list | grep -E ^pulp)
@@ -21,7 +22,15 @@ fi
 
 
 echo "restoring database"
-pg_restore --clean -U pulp -d pulp "/var/lib/pulp/pulp_db.backup"
+
+# pg_restore --clean doesn't work with postgres extensions
+dropdb --user postgres pulp
+su postgres -c "createdb --encoding=utf-8 --locale=en_US.UTF-8 -T template0 -O pulp pulp"
+pg_restore -U pulp -d pulp "/var/lib/pulp/pulp_db.backup"
+
+if [[ "$MIGRATE" -eq "1" ]]; then
+    pulpcore-manager migrate
+fi
 
 # restart the servicees
 echo "$SERVICES" | xargs -I {} s6-rc -u change {}
