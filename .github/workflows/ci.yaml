@@ -18,8 +18,8 @@ jobs:
             TEST: docker
           - os: ubuntu-latest
             TEST: podman
-          - os: macos-12
-            TEST: docker
+          # - os: macos-12
+          #   TEST: docker
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
