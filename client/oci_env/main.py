@@ -63,6 +63,12 @@ def parse_db_command(subparsers):
         dest='filename',
         help=('Back up or restore the database and artifacts to a file in OCI_ENV_PATH/db_backup/')
     )
+    parser.add_argument(
+        '--migrate',
+        action="store_true",
+        dest='migrate',
+        help=('Run migrations after restoring the databse.')
+    )
     parser.set_defaults(func=db)
 
 

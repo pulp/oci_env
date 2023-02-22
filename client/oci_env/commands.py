@@ -34,10 +34,13 @@ def db(args, client):
         )
 
     elif action == 'restore':
+        bash_args = [args.filename, ]
+        if args.migrate:
+            bash_args.append("1")
         exit_if_failed(
             client.exec_container_script(
                 f"db_restore.sh",
-                args=[args.filename, ],
+                args=bash_args,
                 interactive=True)
         )
         client.poll(10, 5)
