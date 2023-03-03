@@ -52,10 +52,7 @@ jobs:
 
       - name: (Ubuntu) Install docker compose
         if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt update
-          sudo curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh ./get-docker.sh
+        uses: docker-practice/actions-setup-docker@1.0.11
 
       - name: (Mac) Install docker compose
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
