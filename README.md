@@ -199,6 +199,19 @@ Please note that `host.containers.internal` points to the wrong interface in `po
 using `podman` < 4.1, you need modify `/etc/hosts` inside the container running Pulp with the IP
 address for the publicly facing network interface on the host.
 
+
+#### Building docs
+
+First, navigate to `/src/{plugin}/docs` in the container and do the following:
+```
+pip3 install -r ../doc_requirements.txt
+make clean && make diagrams && make html
+python3 -m http.server ${DOCS_PORT}
+```
+
+Then, visit `0.0.0.0:${DOCS_PORT}` in a web browser to preview the documentation.
+
+
 ### Unit
 
 ```bash
