@@ -71,9 +71,6 @@ def get_config(env_file):
         "API_PROTOCOL": "http",
         "API_HOST": "localhost",
         "API_PORT": "5001",
-
-        # A port dedicated for exposing generated docs
-        "DOCS_PORT": "12345",
         
         # nginx port to run in the container. This defaults to 5001 if nothing is set or
         # the value of API_HOST if that is set.
