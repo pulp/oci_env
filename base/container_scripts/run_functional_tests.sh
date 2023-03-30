@@ -1,6 +1,7 @@
 #!/bin/bash
 
-declare PROJECT="$1"
+declare PACKAGE="$1"
+declare PROJECT="${PACKAGE//-/_}"
 
 set -e
 
@@ -10,7 +11,7 @@ function check_pytest () {
 
 ERROR: pytest is not installed
 
-This usually means you did not include the "-i" flag with the oci-env "test" 
+This usually means you did not include the "-i" flag with the oci-env "test"
 subcommand. The first invocation of functional tests needs "-i" to install the
 test requirements (inc. pytest). After the requirements are installed, "-i" can
 be dropped from further runs on the same container instance.
@@ -36,7 +37,7 @@ EOF
 
 source "/opt/oci_env/base/container_scripts/configure_pulp_smash.sh"
 
-cd "/src/$PROJECT/"
+cd "/src/$PACKAGE/"
 
 check_pytest
 check_client
