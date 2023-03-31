@@ -1,12 +1,13 @@
 #!/bin/bash
 
-declare PROJECT="$1"
+declare PACKAGE="$1"
+declare PROJECT="${PACKAGE//-/_}"
 
 set -e
 
 export XDG_CONFIG_HOME=/opt/scripts/
 
-cd "/src/$PROJECT/"
+cd "/src/$PACKAGE/"
 
 black --check --diff .
 
