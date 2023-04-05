@@ -60,7 +60,7 @@ def shell(args, client):
     else:
         exit_with_error("Unsupported shell")
 
-    client.exec(cmd, interactive=True)
+    client.exec(cmd, interactive=True, privileged=args.privileged)
 
 
 def test(args, client):
@@ -68,17 +68,31 @@ def test(args, client):
         test_script = f"install_{args.test}_requirements.sh"
 
         if args.plugin:
-            exit_if_failed(client.exec_container_script(test_script, args=[args.plugin]).returncode)
+            exit_if_failed(
+                client.exec_container_script(
+                    test_script,
+                    args=[args.plugin],
+                    privileged=args.privileged,
+                ).returncode
+            )
         else:
             for project in client.config["DEV_SOURCE_PATH"].split(":"):
-                exit_if_failed(client.exec_container_script(test_script, args=[project]).returncode)
+                exit_if_failed(
+                    client.exec_container_script(
+                        test_script,
+                        args=[project],
+                        privileged=args.privileged,
+                    ).returncode
+                )
 
     if args.plugin:
         exit_if_failed(
             client.exec_container_script(
                 f"run_{args.test}_tests.sh",
                 args=[args.plugin] + args.args,
-                interactive=True)
+                interactive=True,
+                privileged=args.privileged,
+            )
         )
 
 
