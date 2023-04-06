@@ -7,6 +7,7 @@ ENV S6_KEEP_ENV=1
 ENV XDG_CONFIG_HOME=/opt/settings
 
 COPY dev_requirements.txt /dev_requirements.txt
+RUN dnf install -y which
 RUN pip3 install -r dev_requirements.txt
 
 COPY settings.py /etc/pulp/settings.py
