@@ -75,6 +75,7 @@ def parse_db_command(subparsers):
 def parse_shell_command(subparsers):
     parser = subparsers.add_parser('shell', help='Launch an interactive shell.')
     parser.add_argument('shell', nargs="?", default="bash", choices=["bash", "python", "db"])
+    parser.add_argument("--privileged", action="store_true", dest="privileged")
     parser.set_defaults(func=shell)
 
 
@@ -84,6 +85,7 @@ def parse_test_command(subparsers):
     parser.add_argument('-i', action='store_true', dest='install_deps', help="Install the python dependencies for the selected test instead of running it. If -p is not specified this will install all the test dependencies for each plugin in DEV_SOURCE_PATH.")
     parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test. Tests won't run unless this is specified.")
     parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to pytest.')
+    parser.add_argument("--privileged", action="store_true", dest="privileged")
     parser.set_defaults(func=test)
 
 

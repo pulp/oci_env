@@ -369,7 +369,7 @@ class Compose:
         except subprocess.CalledProcessError:
             _exit_no_container_found()
 
-    def exec(self, args, service=None, interactive=False, pipe_output=False):
+    def exec(self, args, service=None, interactive=False, pipe_output=False, privileged=False):
         """
         Execute a script in a running container using podman or docker.
 
@@ -387,6 +387,9 @@ class Compose:
         else:
             cmd = [binary, "exec", "-it", self.container_name(service)] + args
 
+        if privileged:
+            cmd = cmd[:2] + ["--privileged"] + cmd[2:]
+
         if self.is_verbose:
             print(f"Running command in container: {' '.join(cmd)}")
 
@@ -403,7 +406,7 @@ class Compose:
 
         return self.exec_container_script("get_dynaconf_var.sh", args=[name], pipe_output=True).stdout.decode().strip()
 
-    def exec_container_script(self, script, args=None, interactive=False, pipe_output=False):
+    def exec_container_script(self, script, args=None, interactive=False, pipe_output=False, privileged=False):
         """
         Executes a script from the base/container_scripts/ directory in the container.
         """
@@ -412,7 +415,7 @@ class Compose:
         script_path = f"/opt/oci_env/base/container_scripts/{script}"
         cmd = ["bash", script_path] + args
 
-        return self.exec(cmd, interactive=interactive, pipe_output=pipe_output)
+        return self.exec(cmd, interactive=interactive, pipe_output=pipe_output, privileged=privileged)
 
     def poll(self, attempts, wait_time):
         status_api = ""
