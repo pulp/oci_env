@@ -6,6 +6,7 @@ set -o pipefail
 
 readonly DEV_SOURCE_PATH="${DEV_SOURCE_PATH:-}"
 readonly LOCK_REQUIREMENTS="${LOCK_REQUIREMENTS:-1}"
+readonly INSTALL_TESTS="${INSTALL_TESTS:-False}"
 
 
 log_message() {
@@ -36,6 +37,25 @@ install_local_deps() {
     done
 }
 
+install_test_deps() {
+    if [ "$INSTALL_TESTS" = "True" ]; then
+        local src_path_list
+        IFS=':' read -ra src_path_list <<< "$DEV_SOURCE_PATH"
+
+        for item in "${src_path_list[@]}"; do
+            src_path="/src/${item}"
+            if [[ -d "$src_path" ]]; then
+                log_message "Installing requirements for ${item}."
+                pip3 install -r "${src_path}"/lint_requirements.txt || true
+                pip3 install -r "${src_path}"/unittest_requirements.txt || true
+                pip3 install -r "${src_path}"/functest_requirements.txt || true
+                pip3 install -r "${src_path}"/perftest_requirements.txt || true
+            fi
+        done
+        # python3 /opt/oci_env/base/container_scripts/install_test_requirements.py
+    fi
+}
+
 create_super_user() {
     pulpcore-manager createsuperuser --no-input --email admin@example.com
 }
@@ -55,6 +75,7 @@ set_nginx_port() {
 init_container() {
     install_local_deps
     set_nginx_port
+    install_test_deps
 }
 
 run_profile_init_scripts() {

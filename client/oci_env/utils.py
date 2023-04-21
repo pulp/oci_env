@@ -86,6 +86,9 @@ def get_config(env_file):
         # Directory on the host where the DEV_SOURCE_PATH projects are checked out
         "SRC_DIR": os.path.abspath(os.path.join(path, "..")),
 
+        # Install tests automatically on startup
+        "INSTALL_TESTS": "False",
+
         # List of : separated profiles to use
         "COMPOSE_PROFILE": "",
 

@@ -67,36 +67,74 @@ def shell(args, client):
 
 
 def test(args, client):
-    if args.install_deps:
-        test_script = f"install_{args.test}_requirements.sh"
+    tr = TestRunner(args, client)
+    tr.install_requirements()
+    tr.run_tests()
 
-        if args.plugin:
-            exit_if_failed(
-                client.exec_container_script(
-                    test_script,
-                    args=[args.plugin],
-                    privileged=args.privileged,
-                ).returncode
-            )
-        else:
-            for project in client.config["DEV_SOURCE_PATH"].split(":"):
+
+class TestRunner:
+    test_requirements_scripts = [
+        "install_functional_requirements.sh",
+        "install_performance_requirements.sh",
+        "install_unit_requirements.sh",
+        "install_lint_requirements.sh",
+    ]
+
+    test_run_scripts = [
+        "run_functional_tests.sh",
+        "run_performance_tests.sh",
+        "run_unit_tests.sh",
+        "run_lint_tests.sh",
+    ]
+
+    def __init__(self, args, client):
+        self.args = args
+        self.client = client
+        self.projects = client.config["DEV_SOURCE_PATH"].split(":")
+
+    def install_requirements(self):
+        if self.args.install_deps:
+            if self.args.test != "all":
+                test_script = f"install_{self.args.test}_requirements.sh"
+                if self.args.plugin:
+                    self.install_test_requirements([self.args.plugin], [test_script])
+                else:
+                    self.install_test_requirements(self.projects, [test_script])
+            else:
+                if self.args.plugin:
+                    self.install_test_requirements([self.args.plugin], self.test_requirements_scripts)
+                else:
+                    self.install_test_requirements(self.projects, self.test_requirements_scripts)
+
+    def install_test_requirements(self, projects, test_requirements_scripts):
+        for project in projects:
+            for test_script in test_requirements_scripts:
+                print(f"Running {test_script} for {project}...")
                 exit_if_failed(
-                    client.exec_container_script(
+                    self.client.exec_container_script(
                         test_script,
                         args=[project],
-                        privileged=args.privileged,
+                        privileged=self.args.privileged,
                     ).returncode
                 )
 
-    if args.plugin:
-        exit_if_failed(
-            client.exec_container_script(
-                f"run_{args.test}_tests.sh",
-                args=[args.plugin] + args.args,
-                interactive=True,
-                privileged=args.privileged,
+    def run_tests(self):
+        if self.args.plugin:
+            if self.args.test != "all":
+                self.run_test_command(self.args.plugin, [f"run_{self.args.test}_tests.sh"])
+            else:
+                self.run_test_command(self.args.plugin, self.test_run_scripts)
+
+    def run_test_command(self, project, tests):
+        for test_script in tests:
+            exit_if_failed(
+                self.client.exec_container_script(
+                    test_script,
+                    args=[project] + self.args.args,
+                    interactive=True,
+                    privileged=self.args.privileged,
+                )
             )
-        )
 
 
 def generate_client(args, client):

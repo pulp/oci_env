@@ -66,6 +66,12 @@ jobs:
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
         uses: docker-practice/actions-setup-docker@1.0.11
 
+      - name: Install dependencies for docker
+        if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install -y httpie
+
       - name: setup .compose.env files
         run: |
           cp oci_env/.github/assets/${TEST}_compose.env oci_env/compose.env
@@ -91,8 +97,8 @@ jobs:
 
       - name: Wait for the stack to spin up
         run: |
-          oci-env poll --wait 15 --attempts 30
-          oci-env -e custom.env poll --wait 5 --attempts 5
+          oci-env poll --wait 15 --attempts 100
+          oci-env -e custom.env poll --wait 5 --attempts 100
 
       - name: Create some dummy data with the pulp CLI (retry up to 5 times because it's sometimes not actually ready)
         run: for i in $(seq 1 5); do oci-env pulp file repository create --name test1 && s=0 && break || s=$? && sleep 5; done; (exit $s)
@@ -128,7 +134,7 @@ jobs:
       - name: Test functional tests
         run: |
           oci-env -v generate-client -i
-          oci-env -v test -i -p pulp_file functional -k test_labels
+          oci-env -v test -p pulp_file functional -k test_labels
 
       - name: Test lint
         run: oci-env -v test -i -p pulp_file lint

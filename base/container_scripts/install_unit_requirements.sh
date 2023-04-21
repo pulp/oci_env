@@ -15,5 +15,5 @@ pip install git+https://github.com/pulp/pulp-smash.git
 cd "/src/$PROJECT/"
 
 if [[ -f unittest_requirements.txt ]]; then
-    pip install -r unittest_requirements.txt
+    pip3 install -r unittest_requirements.txt
 fi

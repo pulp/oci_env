@@ -139,14 +139,21 @@ oci-env -e custom.env compose up
 
 ## Running Tests
 
+Test dependencies are automatically installed after the container startup when you set the `INSTALL_TESTS` variable to `True` in the compose file.
+
 ### Lint
 
 ```bash
+# Re-install all test requirements for all plugins
+
+oci-env test -i
+
 # Install the lint requirements and run the linter for a specific plugin
 
 oci-env test -i -p PLUGIN_NAME lint
 
-# Run the linter without installing lint dependencies.
+# Run the linter without installing lint dependencies
+
 oci-env test -p PLUGIN_NAME lint
 ```
 

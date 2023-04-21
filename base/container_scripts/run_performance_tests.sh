@@ -35,11 +35,19 @@ EOF
     }
 }
 
+function check_test () {
+   [[ -d "${PROJECT}/tests/performance" ]] || {
+       echo "Skipping performance tests because they do not seem to exist..."
+       exit 0
+   }
+}
+
 source "/opt/oci_env/base/container_scripts/configure_pulp_smash.sh"
 
 cd "/src/$PACKAGE/"
 
 check_pytest
 check_client
+check_test
 
 sudo -u pulp -E pytest -r sx --rootdir=/var/lib/pulp --color=yes --pyargs "$PROJECT.tests.performance" "${@:2}"
