@@ -112,6 +112,7 @@ def generate_client(args, client):
     env = {**os.environ, **client.config, "PULP_API_ROOT": api_root}
 
     for plugin in plugins:
+        plugin = plugin.replace("-","_")
         cmd = base_cmd + [plugin, args.language]
         if args.is_verbose:
             print(f"Running local command: {' '.join(cmd)}")
@@ -119,7 +120,7 @@ def generate_client(args, client):
         exit_if_failed(subprocess.run(cmd, env=env, cwd=client.path).returncode)
 
         if args.install_client:
-            exit_if_failed(client.exec_container_script("install_client.sh", args=[plugin.replace("-", "_")]).returncode)
+            exit_if_failed(client.exec_container_script("install_client.sh", args=[plugin]).returncode)
 
 
 def pulpcore_manager(args, client):
