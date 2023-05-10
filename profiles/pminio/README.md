@@ -7,11 +7,14 @@ instance is launched as a separate service and can be accessed inside the main c
 `http://pminio:9000`. The Minio Client CLI,`mc`, is also installed and configured inside the main 
 container to talk to the Minio service.
 
-Do not forget to add a new entry to `/etc/hosts/` for the `pminio` alias on your machine, like so:
+Do not forget to add a new entry to `/etc/hosts` for the `pminio` alias on your machine, like so:
 ```
 127.0.0.1   localhost localhost4 pminio
 ::1         localhost localhost6 pminio
 ```
+
+Ensure that the same entry does not occur in the container's `/etc/hosts` file because it is
+already addressable from within the container by the running service as `pminio`.
 
 ## Extra Variables
 
