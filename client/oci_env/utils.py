@@ -351,7 +351,7 @@ class Compose:
             )
 
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
-        cmd = [binary, "ps", "-q", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
+        cmd = [binary, "ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
         running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
@@ -419,6 +419,8 @@ class Compose:
 
     def poll(self, attempts, wait_time):
         status_api = ""
+
+        attempts = 1
 
         for i in range(attempts):
             print(f"Waiting for API to start (attempt {i+1} of {attempts})")
