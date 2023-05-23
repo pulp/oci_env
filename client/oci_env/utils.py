@@ -434,8 +434,10 @@ class Compose:
     def poll(self, attempts, wait_time):
         status_api = ""
 
+        container_name = self.container_name()
+
         for i in range(attempts):
-            print(f"Waiting for API to start (attempt {i+1} of {attempts})")
+            print(f"Waiting for [{container_name}] API to start (attempt {i+1} of {attempts})")
             # re request the api root each time because it's not alwasy available until the
             # app boots
             api_root = self.get_dynaconf_variable("API_ROOT")
@@ -447,7 +449,7 @@ class Compose:
             )
             try:
                 if request.urlopen(status_api).code == 200:
-                    print(f"{status_api} online after {(i * wait_time)} seconds")
+                    print(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
                     return
             except:
                 time.sleep(wait_time)
@@ -455,4 +457,4 @@ class Compose:
         # give the user some context as to why polling failed ...
         #self.dump_container_logs(self.container_name())
 
-        exit_with_error(f"Failed to start {status_api} after {attempts * wait_time} seconds")
+        exit_with_error(f"Failed to start [{container_name}] {status_api} after {attempts * wait_time} seconds")
