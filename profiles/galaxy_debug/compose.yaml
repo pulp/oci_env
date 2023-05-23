@@ -1,0 +1,34 @@
+---
+# oci-env will copy this file to the $OCI_ENV_HOME/.compiled directoy
+# and add it to the list of compose files run with each operation.
+
+version: "3.7"
+
+services:
+
+  pulp:
+
+    # build on top of the base image so we can 
+    # remove unncessary emdedded postgres s6 scripts
+    build:
+      context: "{OCI_ENV_DIR}/profiles/galaxy_debug"
+      dockerfile: "Dockerfile"
+
+    # this is how django will know where the db is
+    # and how to connect to it.
+    environment:
+      - "PULP_DJANGO_DEBUG=true"
+      - "PULP_DATABASES__default__NAME=pulp"
+      - "PULP_DATABASES__default__HOST=postgres"
+      - "PULP_DATABASES__default__USER=pulp"
+      - "PULP_DATABASES__default__PASSWORD=pulp"
+
+  # enabling debug via the official image is FAR easier
+  # than trying to hack the s6 structure in the pulp image.
+  postgres:
+    image: "postgres:12"
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    environment:
+      - "POSTGRES_USER=pulp"
+      - "POSTGRES_PASSWORD=pulp"
+      - "POSTGRES_DB=pulp"

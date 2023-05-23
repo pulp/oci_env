@@ -1,0 +1,49 @@
+#!/usr/bin/bash -x
+
+# This was copied from the ghcr.io/pulp/pulp-ci-centos image and
+# modified for the purposes of using an external database.
+
+export BASENAME=$(basename ${0})
+export PREFIX="[oneshot] ${BASENAME}:"
+
+export ENDCOLOR="\e[0m"
+export BLACK="\e[30m"
+export RED="\e[31m"
+export GREEN="\e[32m"
+export ORANGE="\e[33m"
+export C034="\e[34m"
+export C035="\e[35m"
+export C036="\e[36m"
+export C037="\e[37m"
+
+#PG_ISREADY=1
+#while [ "$PG_ISREADY" != "0"  ]; do
+#  sleep 1
+#  pg_isready --quiet
+#  PG_ISREADY=$?
+#done
+
+#DB_EXISTS_FILE=/tmp/db_exists
+#su -m -s /bin/bash postgres -c "psql --no-align --tuples-only --command=\"SELECT (1) FROM pg_database WHERE datname='pulp' LIMIT 1\" > $DB_EXISTS_FILE"
+#DATABASE_EXISTS=`cat $DB_EXISTS_FILE`
+#if [ "${DATABASE_EXISTS}" != "1" ]; then
+#  echo -e "${PREFIX} ${GREEN}createuser pulp${ENDCOLOR}"
+#  su postgres -c "createuser pulp" || { echo -e "${PREFIX} ${RED} Creating database user failed${ENDCOLOR}" ; exit 1; }
+#  echo -e "${PREFIX} ${GREEN}createdb --encoding=utf-8 --locale=en_US.UTF-8 -T template0 -O pulp pulp${ENDCOLOR}"
+#  su postgres -c "createdb --encoding=utf-8 --locale=en_US.UTF-8 -T template0 -O pulp pulp" || { echo -e "${PREFIX} ${RED} Creating database failed${ENDCOLOR}" ; exit 1; }
+#else
+#  psql --user postgres -c "ALTER DATABASE pulp OWNER TO pulp;"
+#fi
+
+export DJANGO_SETTINGS_MODULE=pulpcore.app.settings
+export PULP_CONTENT_ORIGIN=localhost
+echo -e "${PREFIX} ${GREEN}running Pulp migrations${ENDCOLOR}"
+su -m pulp -c "/usr/local/bin/pulpcore-manager migrate"
+if [ -n "$PULP_DEFAULT_ADMIN_PASSWORD" ]; then
+  PASSWORD_SET=$(su -m pulp -c '/usr/local/bin/pulpcore-manager shell -c "from django.contrib.auth import get_user_model; print(get_user_model().objects.filter(username=\"admin\").exists())"')
+  if [ "$PASSWORD_SET" = "False" ]; then
+    echo -e "${PREFIX} ${GREEN}Setting Pulp admin password${ENDCOLOR}"
+    su -m pulp -c "/usr/local/bin/pulpcore-manager reset-admin-password --password ${PULP_DEFAULT_ADMIN_PASSWORD}"
+  fi
+fi
+echo -e "ready" > /database/status
