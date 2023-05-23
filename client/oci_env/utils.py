@@ -351,7 +351,7 @@ class Compose:
             )
 
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
-        cmd = [binary, "ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
+        cmd = [binary, "ps", "-q", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
         running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
