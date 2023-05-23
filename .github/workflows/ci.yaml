@@ -92,7 +92,7 @@ jobs:
         run: oci-env db snapshot
 
       - name: Create some dummy data with the pulp CLI
-        run: oci-env pulp file repository create --name test2
+        run: oci-env -v pulp file repository create --name test2
 
       - name: Test DB restore. Test that test1 exists and test2 doesn't
         run: | 
