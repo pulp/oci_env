@@ -434,8 +434,6 @@ class Compose:
     def poll(self, attempts, wait_time):
         status_api = ""
 
-        attempts = 1
-
         for i in range(attempts):
             print(f"Waiting for API to start (attempt {i+1} of {attempts})")
             # re request the api root each time because it's not alwasy available until the
