@@ -417,6 +417,20 @@ class Compose:
 
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output, privileged=privileged)
 
+    def dump_container_logs(self, container_name):
+        binary = self.config["COMPOSE_BINARY"]
+        cmd = [binary, "logs", container_name]
+        pid = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
+        print('*' * 100)
+        print(f'{container_name} log dump ...')
+        print('*' * 100)
+        print(pid.stdout.decode("utf-8"))
+        print('*' * 100)
+
     def poll(self, attempts, wait_time):
         status_api = ""
 
@@ -439,5 +453,8 @@ class Compose:
                     return
             except:
                 time.sleep(wait_time)
+
+        # give the user some context as to why polling failed ...
+        self.dump_container_logs(self.container_name())
 
         exit_with_error(f"Failed to start {status_api} after {attempts * wait_time} seconds")
