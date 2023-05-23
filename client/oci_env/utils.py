@@ -453,6 +453,6 @@ class Compose:
                 time.sleep(wait_time)
 
         # give the user some context as to why polling failed ...
-        self.dump_container_logs(self.container_name())
+        #self.dump_container_logs(self.container_name())
 
         exit_with_error(f"Failed to start {status_api} after {attempts * wait_time} seconds")
