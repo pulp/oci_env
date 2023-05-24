@@ -351,12 +351,8 @@ class Compose:
             )
 
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
-        if binary == 'docker':
-            # WARNING: Ignoring custom format, because both --format and --quiet are set.
-            cmd = [binary, "ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
-        else:
-            # Maybe podman does it differently?
-            cmd = [binary, "ps", "-q", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
+        #   WARNING: Ignoring custom format, because both --format and --quiet are set.
+        cmd = [binary, "ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
         running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
