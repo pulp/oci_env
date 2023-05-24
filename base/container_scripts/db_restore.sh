@@ -39,7 +39,27 @@ set -e
 
 # stop pulp services
 SERVICES=$(s6-rc -a list | grep -E ^pulp)
-echo "$SERVICES" | xargs -I {} s6-rc -d change {}
+
+# wait for pulp processes to actually die ...
+for x in $(seq 1 20); do
+    echo "$SERVICES" | xargs -I {} s6-rc -d change {}
+    PID_COUNT=$(ps aux | fgrep -i pulp | fgrep -v postgres | fgrep -v grep | fgrep -v s6-supervise | wc -l)
+    if [ "$PID_COUNT" -eq "0" ]; then
+        echo "All pulp processes have been shutdown and migration is safe to run"
+        break
+    fi
+    echo "${x} Waiting for pip pids to die so migration can run safely"
+    ps aux | fgrep -i pulp | fgrep -v grep | fgrep -v postgres | fgrep -v s6-supervise
+    sleep 5
+done
+
+# if not all PIDs go down, we can't proceed or we'll face random errors
+PID_COUNT=$(ps aux | fgrep -i pulp | fgrep -v postgres | fgrep -v grep | fgrep -v s6-supervise | wc -l)
+if [ "$PID_COUNT" -ne "0" ]; then
+    echo "Failed to stop all pulp services ..."
+    ps auxf
+    exit 1
+fi
 
 echo "extracting $FILENAME.tar.gz to /var/lib/pulp"
 tar --overwrite -xzf /opt/oci_env/db_backup/$FILENAME.tar.gz -C /var/lib/pulp/
