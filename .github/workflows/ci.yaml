@@ -85,8 +85,7 @@ jobs:
           oci-env poll --wait 15 --attempts 30
           oci-env -e custom.env poll --wait 5 --attempts 5
 
-      - name: Create some dummy data with the pulp CLI
-        #run: oci-env pulp file repository create --name test1
+      - name: Create some dummy data with the pulp CLI (retry up to 5 times because it's sometimes not actually ready)
         run: for i in $(seq 1 5); do oci-env pulp file repository create --name test1 && s=0 && break || s=$? && sleep 5; done; (exit $s)
       
       - name: Snapshot the DB
