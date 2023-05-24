@@ -351,7 +351,8 @@ class Compose:
             )
 
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
-        cmd = [binary, "ps", "-q", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
+        #   WARNING: Ignoring custom format, because both --format and --quiet are set.
+        cmd = [binary, "ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
         running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
@@ -417,11 +418,27 @@ class Compose:
 
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output, privileged=privileged)
 
+    def dump_container_logs(self, container_name):
+        binary = self.config["COMPOSE_BINARY"]
+        cmd = [binary, "logs", container_name]
+        pid = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
+        print('*' * 100)
+        print(f'{container_name} log dump ...')
+        print('*' * 100)
+        print(pid.stdout.decode("utf-8"))
+        print('*' * 100)
+
     def poll(self, attempts, wait_time):
         status_api = ""
 
+        container_name = self.container_name()
+
         for i in range(attempts):
-            print(f"Waiting for API to start (attempt {i+1} of {attempts})")
+            print(f"Waiting for [{container_name}] API to start (attempt {i+1} of {attempts})")
             # re request the api root each time because it's not alwasy available until the
             # app boots
             api_root = self.get_dynaconf_variable("API_ROOT")
@@ -433,9 +450,12 @@ class Compose:
             )
             try:
                 if request.urlopen(status_api).code == 200:
-                    print(f"{status_api} online after {(i * wait_time)} seconds")
+                    print(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
                     return
             except:
                 time.sleep(wait_time)
 
-        exit_with_error(f"Failed to start {status_api} after {attempts * wait_time} seconds")
+        # give the user some context as to why polling failed ...
+        self.dump_container_logs(container_name)
+
+        exit_with_error(f"Failed to start [{container_name}] {status_api} after {attempts * wait_time} seconds")
