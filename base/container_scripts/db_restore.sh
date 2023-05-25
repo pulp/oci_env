@@ -8,6 +8,12 @@ whoami
 declare FILENAME="$1"
 declare MIGRATE="${2-0}"
 
+function count_pulp_pids() {
+    ps aux | grep -e /usr/local/bin/pulpcore-worker -e gunicorn
+    PID_COUNT=$(ps aux | grep -e /usr/local/bin/pulpcore-worker -e gunicorn | wc -l)
+    echo $PID_COUNT
+}
+
 # wait until s6-rc is able to lock
 set +e
 for x in $(seq 1 20); do
@@ -43,18 +49,17 @@ SERVICES=$(s6-rc -a list | grep -E ^pulp)
 # wait for pulp processes to actually die ...
 for x in $(seq 1 20); do
     echo "$SERVICES" | xargs -I {} s6-rc -d change {}
-    PID_COUNT=$(ps aux | fgrep -i pulp | fgrep -v postgres | fgrep -v grep | fgrep -v s6-supervise | wc -l)
+    PID_COUNT=$(count_pulp_pids)
     if [ "$PID_COUNT" -eq "0" ]; then
         echo "All pulp processes have been shutdown and migration is safe to run"
         break
     fi
     echo "${x} Waiting for pip pids to die so migration can run safely"
-    ps aux | fgrep -i pulp | fgrep -v grep | fgrep -v postgres | fgrep -v s6-supervise
     sleep 5
 done
 
 # if not all PIDs go down, we can't proceed or we'll face random errors
-PID_COUNT=$(ps aux | fgrep -i pulp | fgrep -v postgres | fgrep -v grep | fgrep -v s6-supervise | wc -l)
+PID_COUNT=$(count_pulp_pids)
 if [ "$PID_COUNT" -ne "0" ]; then
     echo "Failed to stop all pulp services ..."
     ps auxf
