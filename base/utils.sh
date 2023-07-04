@@ -52,9 +52,21 @@ set_nginx_port() {
     /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /etc/nginx/nginx.conf
 }
 
+set_nginx_timeout() {
+    echo "setting nginx timeout"
+    # keepalive_timeout_str=\ \ \ \ keepalive_timeout ${PULP_GUNICORN_TIMEOUT};\n
+    # send_timeout_str=\ \ \ \ send_timeout ${PULP_GUNICORN_TIMEOUT};\n
+    # client_body_timeout_str=\ \ \ \ client_body_timeout ${PULP_GUNICORN_TIMEOUT};\n
+    # client_header_timeout_str=\ \ \ \ client_header_timeout ${PULP_GUNICORN_TIMEOUT};\n
+
+    # /usr/bin/sed -i '/^http {.*/a '"${keepalive_timeout_str}"' '"${send_timeout_str}"' '"${client_body_timeout_str}"' '"${client_header_timeout_str}"'' /nginx/nginx.conf
+    /usr/bin/sed -i '/^http {.*/a \ \ \ \ keepalive_timeout '"${PULP_GUNICORN_TIMEOUT}"';\n\ \ \ \ send_timeout '"${PULP_GUNICORN_TIMEOUT}"';\n\ \ \ \ client_body_timeout '"${PULP_GUNICORN_TIMEOUT}"';\n\ \ \ \ client_header_timeout '"${PULP_GUNICORN_TIMEOUT}"';\n' /nginx/nginx.conf
+}
+
 init_container() {
     install_local_deps
     set_nginx_port
+    set_nginx_timeout
 }
 
 run_profile_init_scripts() {
