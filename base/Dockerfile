@@ -8,6 +8,11 @@ ENV XDG_CONFIG_HOME=/opt/settings
 
 COPY dev_requirements.txt /dev_requirements.txt
 RUN dnf install -y which
+
+COPY switch_python /usr/bin/switch_python
+ARG PYTHON_VERSION=3.8
+RUN switch_python "$PYTHON_VERSION"
+
 RUN pip3 install -r dev_requirements.txt
 
 COPY settings.py /etc/pulp/settings.py
