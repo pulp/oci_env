@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  _base:
+    build:
+      context: "{OCI_ENV_DIR}/base/"
+      dockerfile: "Dockerfile"
+      args:
+        PYTHON_VERSION: 3.11
