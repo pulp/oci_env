@@ -50,6 +50,12 @@ jobs:
           sudo pip install podman-compose
           podman --version
 
+      - name: fix podman
+        if: matrix.TEST == 'podman' && matrix.os == 'ubuntu-latest'
+        run: |
+          curl -o /tmp/containernetworking-plugins_1.1.1+ds1-1_amd64.deb http://archive.ubuntu.com/ubuntu/pool/universe/g/golang-github-containernetworking-plugins/containernetworking-plugins_1.1.1+ds1-1_amd64.deb
+          sudo dpkg -i /tmp/containernetworking-plugins_1.1.1+ds1-1_amd64.deb
+
       - name: (Ubuntu) Install docker compose
         if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
         uses: docker-practice/actions-setup-docker@1.0.11
