@@ -75,6 +75,7 @@ jobs:
           cp oci_env/.github/assets/${TEST}_compose.env oci_env/compose.env
           cp oci_env/.github/assets/${TEST}_compose.env ${PWD}/custom.env
           echo "API_PORT=7210" >> ${PWD}/custom.env
+          echo "DOCS_PORT=12346" >> ${PWD}/custom.env
           echo "COMPOSE_PROJECT_NAME=my_2nd_project" >> ${PWD}/custom.env
           echo "SECOND_SERVICE_PORT=7002" >> ${PWD}/custom.env
 
