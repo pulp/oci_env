@@ -36,8 +36,8 @@ jobs:
       - name: Set environment variables
         run: |
           echo "TEST=${{ matrix.TEST }}" >> $GITHUB_ENV
-          #echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
           echo "COMPOSE_INTERACTIVE_NO_CLI=1" >> $GITHUB_ENV
+          #echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
 
       - name: clone pulpcore, pulp_file, pulp-openapi-generator
         run: |
