@@ -18,16 +18,16 @@ def get_oci_env_path():
 
     # use cwd -if- it is an oci-env checkout
     cwd = os.getcwd()
-    if os.path.basename(cwd) == "oci_env":
-        print(f'USING CWD ({cwd} FOR OCI_ENV_PATH')
-        return cwd
+    #if os.path.basename(cwd) == "oci_env":
+    #    print(f'USING CWD ({cwd} FOR OCI_ENV_PATH')
+    #    return cwd
 
     # let's try to find the pip path ...
     try:
         import oci_env
     except ImportError:
         # fallback to cwd if we can't import
-        print(f'USING CWD ({cwd} FOR OCI_ENV_PATH BECAUSE OF OCI IMPORT FAILURE')
+        print(f'USING CWD ({cwd}) FOR OCI_ENV_PATH BECAUSE OF OCI IMPORT FAILURE')
         return cwd
 
     # this is the $CHECKOUT/client/oci_env/__init__.py path ...
