@@ -10,6 +10,8 @@ from urllib import request
 def get_oci_env_path():
     """This returns the root directory of the oci-env checkout."""
 
+    print(f'FOUND GITHUB_WORKSPACE={os.environ.get("GITHUB_WORKSPACE")}')
+
     if os.environ.get("OCI_ENV_PATH"):
         print('USING OCI_ENV_PATH FROM ENVIRONMENT: {os.environ.get("OCI_ENV_PATH")}')
         return os.environ.get("OCI_ENV_PATH")
