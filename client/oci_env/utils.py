@@ -8,7 +8,40 @@ from urllib import request
 
 
 def get_oci_env_path():
-    return os.environ.get("OCI_ENV_PATH", os.getcwd())
+    """This returns the root directory of the oci-env checkout."""
+
+    if os.environ.get("OCI_ENV_PATH"):
+        return os.environ.get("OCI_ENV_PATH")
+
+    # use cwd -if- it is an oci-env checkout
+    cwd = os.getcwd()
+    if os.path.basename(cwd) == "oci_env":
+        return cwd
+
+    # let's try to find the pip path ...
+    try:
+        import oci_env
+    except ImportError:
+        # fallback to cwd if we can't import
+        return cwd
+
+    # this is the $CHECKOUT/client/oci_env/__init__.py path ...
+    path = os.path.dirname(oci_env.__file__)
+
+    # use git to find the root dir ...
+    pid = subprocess.run(
+        "git rev-parse --show-toplevel",
+        cwd=path,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    if pid.returncode != 0:
+        return cwd
+
+    gitroot = pid.stdout.decode('utf-8').strip()
+    return gitroot
+
 
 def exit_with_error(msg):
     print(msg)
