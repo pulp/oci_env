@@ -11,11 +11,13 @@ def get_oci_env_path():
     """This returns the root directory of the oci-env checkout."""
 
     if os.environ.get("OCI_ENV_PATH"):
+        print('USING OCI_ENV_PATH FROM ENVIRONMENT: {os.environ.get("OCI_ENV_PATH")}')
         return os.environ.get("OCI_ENV_PATH")
 
     # use cwd -if- it is an oci-env checkout
     cwd = os.getcwd()
     if os.path.basename(cwd) == "oci_env":
+        print(f'USING CWD ({cwd} FOR OCI_ENV_PATH')
         return cwd
 
     # let's try to find the pip path ...
@@ -23,6 +25,7 @@ def get_oci_env_path():
         import oci_env
     except ImportError:
         # fallback to cwd if we can't import
+        print(f'USING CWD ({cwd} FOR OCI_ENV_PATH BECAUSE OF OCI IMPORT FAILURE')
         return cwd
 
     # this is the $CHECKOUT/client/oci_env/__init__.py path ...
@@ -37,9 +40,11 @@ def get_oci_env_path():
         stderr=subprocess.PIPE
     )
     if pid.returncode != 0:
+        print(f'USING CWD {cwd} FOR OCI_ENV_PATH BECAUSE OF GIT CMD FAILURE {pid.stdout}')
         return cwd
 
     gitroot = pid.stdout.decode('utf-8').strip()
+    print(f'USING {gitroot} FOR OCI_ENV_PATH BASED ON GIT CMD OUTPUT')
     return gitroot
 
 
