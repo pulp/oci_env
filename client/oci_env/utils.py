@@ -47,7 +47,7 @@ def get_oci_env_path():
 
     gitroot = pid.stdout.decode('utf-8').strip()
     print(f'USING {gitroot} FOR OCI_ENV_PATH BASED ON GIT CMD OUTPUT')
-    return gitroot
+    return gitroot.rstrip('/') + '/'
 
 
 def exit_with_error(msg):
