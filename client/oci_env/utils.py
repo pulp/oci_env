@@ -5,11 +5,16 @@ import time
 
 from genericpath import isfile
 from urllib import request
-from logzero import logger
+
+#from logzero import logger
+from oci_env.logger import logger
 
 
 def get_oci_env_path():
     """This returns the root directory of the oci-env checkout."""
+
+    print(type(logger))
+
     if os.environ.get("OCI_ENV_PATH"):
         logger.info('USING OCI_ENV_PATH FROM ENVIRONMENT: {os.environ.get("OCI_ENV_PATH")}')
         return os.environ.get("OCI_ENV_PATH")

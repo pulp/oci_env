@@ -9,7 +9,7 @@ setup(
     entry_points={
         'console_scripts': ['oci-env=oci_env.main:main'],
     },
-    install_requires=['logzero'],
+    install_requires=[],
     packages=find_packages(exclude=["tests", "tests.*"]),
     long_description=long_description,
     long_description_content_type="text/markdown",
