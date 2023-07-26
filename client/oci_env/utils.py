@@ -15,9 +15,9 @@ def get_oci_env_path():
 
     print(type(logger))
 
-    if os.environ.get("OCI_ENV_PATH"):
-        logger.info('USING OCI_ENV_PATH FROM ENVIRONMENT: {os.environ.get("OCI_ENV_PATH")}')
-        return os.environ.get("OCI_ENV_PATH")
+    if OCI_ENV_PATH := os.environ.get("OCI_ENV_PATH"):
+        logger.info('USING OCI_ENV_PATH FROM ENV: {OCI_ENV_PATH}')
+        return OCI_ENV_PATH
 
     # this is the $CHECKOUT/client/oci_env/utils.py path ...
     path = os.path.dirname(__file__)
