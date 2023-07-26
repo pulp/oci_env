@@ -65,10 +65,6 @@ jobs:
             sudo dpkg -i containernetworking-plugins_1.1.1+ds1-1_amd64.deb
           fi
 
-      #- name: (Ubuntu) Install docker compose
-      #  if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
-      #  uses: docker-practice/actions-setup-docker@1.0.11
-
       - name: (Mac) Install docker compose
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
         uses: docker-practice/actions-setup-docker@1.0.11
