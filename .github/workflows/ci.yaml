@@ -30,9 +30,6 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: DEBUG VAR
-        run: echo "${GITHUB_WORKSPACE}"
-
       - name: Set environment variables
         run: |
           echo "TEST=${{ matrix.TEST }}" >> $GITHUB_ENV

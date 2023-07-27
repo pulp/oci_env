@@ -38,8 +38,8 @@ console_handler.setFormatter(formatter)
 
 
 if os.environ.get("OCI_ENV_DEBUG"):
-	logger.setLevel(logging.DEBUG)
-	console_handler.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
+    console_handler.setLevel(logging.DEBUG)
 
 
 # Add the console handler to the logger
