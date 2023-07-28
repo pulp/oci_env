@@ -13,6 +13,7 @@ def get_oci_env_path():
     """This returns the root directory of the oci-env checkout."""
 
     if OCI_ENV_PATH := os.environ.get("OCI_ENV_PATH"):
+        OCI_ENV_PATH = OCI_ENV_PATH.rstrip('/')
         logger.info('USING OCI_ENV_PATH FROM ENV: {OCI_ENV_PATH}')
         return OCI_ENV_PATH
 
@@ -28,13 +29,13 @@ def get_oci_env_path():
         stderr=subprocess.PIPE
     )
     if pid.returncode != 0:
-        cwd = os.getcwd()
+        cwd = os.getcwd().rstrip('/')
         logger.warning(f'USING CWD {cwd} FOR OCI_ENV_PATH BECAUSE OF GIT CMD FAILURE {pid.stdout}')
         return cwd
 
-    gitroot = pid.stdout.decode('utf-8').strip()
+    gitroot = pid.stdout.decode('utf-8').strip().rstrip('/')
     logger.info(f'USING {gitroot} FOR OCI_ENV_PATH BASED ON GIT CMD OUTPUT')
-    return gitroot.rstrip('/') + '/'
+    return gitroot
 
 
 def exit_with_error(msg):
