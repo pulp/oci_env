@@ -33,8 +33,8 @@ jobs:
       - name: Set environment variables
         run: |
           echo "TEST=${{ matrix.TEST }}" >> $GITHUB_ENV
-          echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
           echo "COMPOSE_INTERACTIVE_NO_CLI=1" >> $GITHUB_ENV
+          #echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
 
       - name: clone pulpcore, pulp_file, pulp-openapi-generator
         run: |
@@ -61,10 +61,6 @@ jobs:
             curl -O http://archive.ubuntu.com/ubuntu/pool/universe/g/golang-github-containernetworking-plugins/containernetworking-plugins_1.1.1+ds1-1_amd64.deb
             sudo dpkg -i containernetworking-plugins_1.1.1+ds1-1_amd64.deb
           fi
-
-      - name: (Ubuntu) Install docker compose
-        if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
-        uses: docker-practice/actions-setup-docker@1.0.11
 
       - name: (Mac) Install docker compose
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'

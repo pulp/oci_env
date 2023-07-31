@@ -1,18 +1,47 @@
-from genericpath import isfile
 import os
-import subprocess
 import pathlib
+import subprocess
 import time
 
+from genericpath import isfile
 from urllib import request
+
+from oci_env.logger import logger
 
 
 def get_oci_env_path():
-    return os.environ.get("OCI_ENV_PATH", os.getcwd())
+    """This returns the root directory of the oci-env checkout."""
+
+    if OCI_ENV_PATH := os.environ.get("OCI_ENV_PATH"):
+        OCI_ENV_PATH = OCI_ENV_PATH.rstrip('/')
+        logger.info('USING OCI_ENV_PATH FROM ENV: {OCI_ENV_PATH}')
+        return OCI_ENV_PATH
+
+    # this is the $CHECKOUT/client/oci_env/utils.py path ...
+    path = os.path.dirname(__file__)
+
+    # use git to find the root dir ...
+    pid = subprocess.run(
+        "git rev-parse --show-toplevel",
+        cwd=path,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    if pid.returncode != 0:
+        cwd = os.getcwd().rstrip('/')
+        logger.warning(f'USING CWD {cwd} FOR OCI_ENV_PATH BECAUSE OF GIT CMD FAILURE {pid.stdout}')
+        return cwd
+
+    gitroot = pid.stdout.decode('utf-8').strip().rstrip('/')
+    logger.info(f'USING {gitroot} FOR OCI_ENV_PATH BASED ON GIT CMD OUTPUT')
+    return gitroot
+
 
 def exit_with_error(msg):
-    print(msg)
+    logger.error(msg)
     exit(1)
+
 
 def read_env_file(path, exit_on_error=True):
     """
@@ -75,7 +104,7 @@ def get_config(env_file):
         # A port dedicated for exposing generated docs
         "DOCS_PORT": "12345",
         "NGINX_DOCS_PORT": user_preferences.get("DOCS_PORT", "12345"),
-        
+
         # nginx port to run in the container. This defaults to 5001 if nothing is set or
         # the value of API_HOST if that is set.
         "NGINX_PORT": user_preferences.get("API_PORT", "5001"),
@@ -268,8 +297,8 @@ def get_env_file(path, env_file):
         for f in files:
             if os.path.isfile(f):
                 return f
-        print(f"No compose.env or .compose.env file found in {path}.")
-        
+        logger.error(f"No compose.env or .compose.env file found in {path}.")
+
     else:
         files = [
             os.path.abspath(env_file),
@@ -279,8 +308,8 @@ def get_env_file(path, env_file):
         for f in files:
             if os.path.isfile(f):
                 return f
-        print(f"Could not find file {env_file}")
-    
+        logger.error(f"Could not find file {env_file}")
+
     exit(1)
 
 
@@ -318,7 +347,7 @@ class Compose:
         cmd = binary + compose_files + cmd
 
         if self.is_verbose:
-            print(f"Running command in container: {' '.join(cmd)}")
+            logger.info(f"Running command in container: {' '.join(cmd)}")
 
         if interactive:
             return subprocess.call(cmd)
@@ -339,7 +368,7 @@ class Compose:
         def _exit_no_container_found():
             service_name = service if service[-1].isdigit() else f"{service}_1"
             name = f"{project_name}_{service_name}"
-            print(
+            logger.error(
                 f"Could not find a running container named: {name} \n"
                 f"instead of {service!r} did you mean 'pulp' or 'ui'?\n"
                 "Run `oci-env compose ps` to see all running containers."
@@ -396,7 +425,7 @@ class Compose:
             cmd = cmd[:2] + ["--privileged"] + cmd[2:]
 
         if self.is_verbose:
-            print(f"Running command in container: {' '.join(cmd)}")
+            logger.info(f"Running command in container: {' '.join(cmd)}")
 
         if interactive:
             proc = subprocess.call(cmd)
@@ -454,7 +483,7 @@ class Compose:
             )
             try:
                 if request.urlopen(status_api).code == 200:
-                    print(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
+                    logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
                     return
             except:
                 time.sleep(wait_time)
