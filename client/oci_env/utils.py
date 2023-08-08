@@ -123,9 +123,19 @@ def get_config(env_file):
         "WORKER_CONTAINER": "pulp",
     }
 
-
     # override any defaults that the user set.
-    return {**config, **user_preferences, **constant_vals}
+    cfg = {**config, **user_preferences, **constant_vals}
+
+    # allow env overrides except for constants
+    for key in sorted(list(cfg.keys())):
+        if key in os.environ and key not in constant_vals:
+            val = os.environ.get(key)
+            cfg[key] = val
+        else:
+            val = cfg[key]
+        logger.info(f'OCI-ENV cfg {key}={val}')
+
+    return cfg
 
 
 def parse_profiles(config):
@@ -346,12 +356,13 @@ class Compose:
 
         cmd = binary + compose_files + cmd
 
-        if self.is_verbose:
-            logger.info(f"Running command in container: {' '.join(cmd)}")
-
         if interactive:
+            if self.is_verbose:
+                logger.info(f"Running [interactive] command in container: {' '.join(cmd)}")
             return subprocess.call(cmd)
         else:
+            if self.is_verbose:
+                logger.info(f"Running [non-interactive] command in container: {' '.join(cmd)}")
             return subprocess.run(cmd, capture_output=pipe_output)
 
     def container_name(self, service=None):
@@ -424,12 +435,13 @@ class Compose:
         if privileged:
             cmd = cmd[:2] + ["--privileged"] + cmd[2:]
 
-        if self.is_verbose:
-            logger.info(f"Running command in container: {' '.join(cmd)}")
-
         if interactive:
+            if self.is_verbose:
+                logger.info(f"Running [interactive] command in container: {' '.join(cmd)}")
             proc = subprocess.call(cmd)
         else:
+            if self.is_verbose:
+                logger.info(f"Running [non-interactive] command in container: {' '.join(cmd)}")
             proc = subprocess.run(cmd, capture_output=pipe_output)
         return proc
 
