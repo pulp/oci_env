@@ -1,4 +1,6 @@
 import argparse
+import os
+
 from distutils.command.config import config
 
 from oci_env.commands import (
@@ -19,9 +21,28 @@ from oci_env.utils import (
 )
 
 
+def get_env_bool(key, default=False):
+    if key not in os.environ:
+        return default
+
+    val = os.environ.get(key)
+    if val is None:
+        return False
+
+    # truthy
+    if val.lower().strip() in ['yes', 'true', '1']:
+        return True
+
+    # falsy
+    if val.lower().strip() in ['no', 'false', '0', 'null', 'none', '']:
+        return False
+
+    return default
+
+
 def get_parser():
     parser = argparse.ArgumentParser(description='Pulp OCI image developer environment.')
-    parser.add_argument('-v', action='store_true', dest='is_verbose', help="Print extra debug information.")
+    parser.add_argument('-v', action='store_true', dest='is_verbose', default=get_env_bool("OCI_VERBOSE"), help="Print extra debug information.")
     parser.add_argument('-e', type=str, default="", dest='env_file', help="Specify an environment file to use other than the default.")
 
     subparsers = parser.add_subparsers()
@@ -143,6 +164,7 @@ def main():
         parser.print_help()
         exit()
 
+    import epdb; epdb.st()
     client = Compose(args.is_verbose, args.env_file)
     try:
         args.func(args, client)
