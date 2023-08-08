@@ -164,7 +164,6 @@ def main():
         parser.print_help()
         exit()
 
-    import epdb; epdb.st()
     client = Compose(args.is_verbose, args.env_file)
     try:
         args.func(args, client)
