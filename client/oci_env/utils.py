@@ -133,7 +133,6 @@ def get_config(env_file):
             cfg[key] = val
         else:
             val = cfg[key]
-        logger.info(f'OCI-ENV cfg {key}={val}')
 
     return cfg
 
@@ -338,6 +337,10 @@ class Compose:
         self.config = get_config(get_env_file(self.path, env_file))
         self.compose_files = parse_profiles(self.config)
         self.is_verbose = is_verbose
+
+        if self.is_verbose:
+            for key in sorted(self.config.keys()):
+                logger.info(f'OCI CFG {key} = {self.config[key]}')
 
     def compose_command(self, cmd, interactive=False, pipe_output=False):
         """
