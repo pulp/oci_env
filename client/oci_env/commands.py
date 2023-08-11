@@ -2,15 +2,18 @@ import subprocess
 import os
 import pathlib
 
+from oci_env.logger import logger
 from oci_env.utils import exit_if_failed, exit_with_error
 from oci_env.templates import profile_templates
 
 
 def compose(args, client):
+    logger.info(f'COMPOSE {args}')
     client.compose_command(args.command, interactive=True)
 
 
 def exec(args, client):
+    logger.info(f'EXEC {args}')
     exit_if_failed(client.exec(args.command, interactive=True, service=args.service))
 
 
