@@ -4,5 +4,5 @@ epdb
 py-spy
 pydevd_pycharm
 django-extensions
-pulp-cli
+pulp-cli==0.20.2
 pulp-cli-deb
