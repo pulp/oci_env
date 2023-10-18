@@ -2,7 +2,7 @@
 
 ## Usage
 
-This profile is intended to be used as a developer environment to integrate OpenTelemetry framework with Pulp.
+This profile is intended to be used as a developer environment to integrate OpenTelemetry framework with Pulp. Currently, this profile cannot be used with other profiles simultaneously.
 
 So, the stack is composed by:
 * Prometheus (exposed at port 8889)
@@ -35,7 +35,7 @@ just like pulp/pulpcore#3632.
 
 
 ## Extra Variables
-- `PULP_OTEL_ENABLE`
+- `PULP_OTEL_ENABLED`
     - Description: Enable telemetry on Pulp.
     - Options:
         - true: Enable OpenTelemetry
