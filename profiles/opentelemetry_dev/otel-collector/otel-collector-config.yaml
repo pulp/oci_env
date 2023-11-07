@@ -20,7 +20,7 @@ exporters:
       enabled: true
   logging:
     verbosity: detailed
-  jaeger:
+  otlp/jaeger:
     endpoint: jaeger:14250
     tls:
       insecure: true
@@ -42,7 +42,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [jaeger]
+      exporters: [otlp/jaeger]
     metrics:
       receivers: [otlp]
       processors: [batch]
