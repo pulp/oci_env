@@ -10,17 +10,18 @@ receivers:
 
 processors:
   batch:
-    timeout: 3s
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 128
 
 exporters:
   prometheus:
     endpoint: 0.0.0.0:8889
     send_timestamps: true
-    resource_to_telemetry_conversion:
-      enabled: true
+    namespace: pulp
   logging:
     verbosity: detailed
-  jaeger:
+  otlp/jaeger:
     endpoint: jaeger:14250
     tls:
       insecure: true
@@ -41,13 +42,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [jaeger]
+      processors: [memory_limiter, batch]
+      exporters: [otlp/jaeger]
     metrics:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch]
       exporters: [logging, prometheus]
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch]
       exporters: [logging]
