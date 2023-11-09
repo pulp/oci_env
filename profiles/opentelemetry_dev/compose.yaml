@@ -49,9 +49,10 @@ services:
     volumes:
       - {OCI_ENV_DIR}/profiles/{COMPOSE_PROFILE}/grafana/provisioning:/etc/grafana/provisioning
       - {OCI_ENV_DIR}/profiles/{COMPOSE_PROFILE}/grafana/dashboards:/var/lib/grafana/dashboards
-      - type: bind
-        source: ./grafana/config.ini
-        target: /etc/grafana/config.ini
+      - {OCI_ENV_DIR}/profiles/{COMPOSE_PROFILE}/grafana/config.ini:/etc/grafana/config.ini
+      # - type: bind
+      #   source: ./grafana/config.ini
+      #   target: /etc/grafana/config.ini
     ports:
       - "3000:3000"
 
