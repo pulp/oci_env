@@ -22,6 +22,10 @@ jobs:
           #   TEST: docker
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+
       - uses: actions/checkout@v3
         with:
           path: "oci_env"
@@ -50,9 +54,17 @@ jobs:
           sudo pip install podman-compose
           podman --version
 
-      - name: (Mac) Install docker compose
-        if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
-        uses: docker-practice/actions-setup-docker@1.0.11
+      # https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394
+      - name: fix podman
+        if: matrix.TEST == 'podman' && matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          if [[ $(dpkg-query --showformat='${Version}' --show podman) == "3.4.4+ds1-1ubuntu1.22.04.1" && $(dpkg-query --showformat='${Version}' --show containernetworking-plugins) == "0.9.1+ds1-1" ]]
+          then
+            echo "Working around https://bugs.launchpad.net/ubuntu/+source/libpod/+bug/2024394"
+            curl -O http://archive.ubuntu.com/ubuntu/pool/universe/g/golang-github-containernetworking-plugins/containernetworking-plugins_1.1.1+ds1-1_amd64.deb
+            sudo dpkg -i containernetworking-plugins_1.1.1+ds1-1_amd64.deb
+          fi
 
       - name: setup .compose.env files
         run: |
