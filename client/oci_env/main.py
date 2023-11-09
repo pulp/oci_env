@@ -1,8 +1,6 @@
 import argparse
 import os
 
-from distutils.command.config import config
-
 from oci_env.commands import (
     compose,
     exec,

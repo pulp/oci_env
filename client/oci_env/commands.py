@@ -22,7 +22,7 @@ def db(args, client):
     if action == 'reset':
         exit_if_failed(
             client.exec_container_script(
-                f"database_reset.sh",
+                "database_reset.sh",
                 args=None,
                 interactive=True)
         )
@@ -31,7 +31,7 @@ def db(args, client):
     elif action == 'snapshot':
         exit_if_failed(
             client.exec_container_script(
-                f"db_snapshot.sh",
+                "db_snapshot.sh",
                 args=[args.filename, ],
                 interactive=True)
         )
@@ -42,7 +42,7 @@ def db(args, client):
             bash_args.append("1")
         exit_if_failed(
             client.exec_container_script(
-                f"db_restore.sh",
+                "db_restore.sh",
                 args=bash_args,
                 interactive=True)
         )
@@ -165,7 +165,7 @@ def profile(args, client):
 
         for p in plugins:
             profile_dir = os.path.join(src_dir, p, "profiles")
-            if not  os.path.isdir(profile_dir):
+            if not os.path.isdir(profile_dir):
                 continue
 
             print(f"Plugin: {p}")
