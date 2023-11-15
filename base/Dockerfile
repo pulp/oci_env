@@ -7,7 +7,6 @@ ENV S6_KEEP_ENV=1
 ENV XDG_CONFIG_HOME=/opt/settings
 
 COPY dev_requirements.txt /dev_requirements.txt
-RUN dnf install -y which
 
 COPY switch_python /usr/bin/switch_python
 ARG PYTHON_VERSION=3.8
