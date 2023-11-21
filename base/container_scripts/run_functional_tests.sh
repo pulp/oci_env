@@ -1,9 +1,15 @@
 #!/bin/bash
 
 declare PACKAGE="$1"
-declare PROJECT="${PACKAGE//-/_}"
 
 set -e
+
+if [ $PACKAGE == "pulp_file" ]
+then
+    declare PACKAGE="pulpcore"
+fi
+
+declare PROJECT="${PACKAGE//-/_}"
 
 function check_pytest () {
     sudo -u pulp -E type pytest || {
