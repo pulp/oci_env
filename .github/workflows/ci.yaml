@@ -16,17 +16,17 @@ jobs:
         include:
           - os: ubuntu-latest
             TEST: docker
-          - os: ubuntu-latest
-            TEST: podman
+          # - os: ubuntu-latest
+          #   TEST: podman
           # - os: macos-12
           #   TEST: docker
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: "oci_env"
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.8"
 
@@ -36,10 +36,9 @@ jobs:
           echo "COMPOSE_INTERACTIVE_NO_CLI=1" >> $GITHUB_ENV
           #echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
 
-      - name: clone pulpcore, pulp_file, pulp-openapi-generator
+      - name: clone pulpcore, pulp-openapi-generator
         run: |
           git clone --depth 1 https://github.com/pulp/pulpcore.git
-          git clone --depth 1 https://github.com/pulp/pulp_file.git
           git clone --depth 1 https://github.com/pulp/pulp-openapi-generator.git
 
       - name: Install podman compose
@@ -116,13 +115,14 @@ jobs:
       - name: Test functional tests
         run: |
           oci-env -v generate-client -i
-          oci-env -v test -i -p pulp_file functional -k test_labels
+          oci-env -v generate-client -i pulp_file
+          oci-env -v test -i -p pulpcore functional -k test_labels
 
       - name: Test lint
-        run: oci-env -v test -i -p pulp_file lint
+        run: oci-env -v test -i -p pulpcore lint
 
       - name: Test unit
-        run: oci-env test -i -p pulp_file unit
+        run: oci-env test -i -p pulpcore unit
 
       - name: Test profile init scripts
         run: |
@@ -159,7 +159,6 @@ jobs:
       - name: Test profile generation
         run: |
           oci-env profile init _test_profile
-          oci-env profile init -p pulp_file _test_profile
 
           # Test that files were created correctly
           ls oci_env/profiles/_test_profile/ | grep README.md
@@ -168,13 +167,6 @@ jobs:
           ls oci_env/profiles/_test_profile/ | grep compose.yaml
           ls oci_env/profiles/_test_profile/ | grep profile_requirements.txt
           ls oci_env/profiles/_test_profile/ | grep profile_default_config.env
-
-          ls pulp_file/profiles/_test_profile/ | grep README.md
-          ls pulp_file/profiles/_test_profile/ | grep init.sh
-          ls pulp_file/profiles/_test_profile/ | grep pulp_config.env
-          ls pulp_file/profiles/_test_profile/ | grep compose.yaml
-          ls pulp_file/profiles/_test_profile/ | grep profile_requirements.txt
-          ls pulp_file/profiles/_test_profile/ | grep profile_default_config.env
 
       - name: Test profile ls
         run: oci-env profile ls | grep _test_profile

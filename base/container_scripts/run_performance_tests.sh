@@ -1,6 +1,12 @@
 #!/bin/bash
 
 declare PACKAGE="$1"
+
+if [ $PACKAGE == "pulp_file" ]
+then
+    declare PACKAGE="pulpcore"
+fi
+
 declare PROJECT="${PACKAGE//-/_}"
 
 set -e
