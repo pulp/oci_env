@@ -3,7 +3,6 @@ import pathlib
 import subprocess
 import time
 
-from genericpath import isfile
 from urllib import request
 
 from oci_env.logger import logger
