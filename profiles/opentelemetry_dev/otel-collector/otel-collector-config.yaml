@@ -12,17 +12,17 @@ processors:
   batch:
   memory_limiter:
     check_interval: 1s
-    limit_mib: 128
+    limit_mib: 4000
 
 exporters:
   prometheus:
     endpoint: 0.0.0.0:8889
-    send_timestamps: true
+    # send_timestamps: true
     namespace: pulp
   logging:
     verbosity: detailed
   otlp/jaeger:
-    endpoint: jaeger:14250
+    endpoint: jaeger:4317
     tls:
       insecure: true
 
@@ -38,7 +38,7 @@ service:
 #       level: detailed
 #       address: 0.0.0.0:8888
 
-  extensions: [health_check, pprof, zpages]
+  extensions: []
   pipelines:
     traces:
       receivers: [otlp]

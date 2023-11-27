@@ -104,13 +104,14 @@ jobs:
 
       - name: Test that the correct plugins are installed and that the API_ROOT was successfully changed.
         run: |
-          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
-          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulp-file
+          
+          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r '.versions[]|select (.component=="core").component=="core"'
+          curl localhost:5001/my/custom/api/api/v3/status/ | jq -r '.versions[]|select (.component=="file").component=="file"'
 
       - name: Test that the second instance of oci-env is running correctly.
         run: |
-          curl localhost:7210/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulpcore
-          curl localhost:7210/my/custom/api/api/v3/status/ | jq -r ".versions" | grep pulp-file
+          curl localhost:7210/my/custom/api/api/v3/status/ | jq -r '.versions[]|select (.component=="core").component=="core"'
+          curl localhost:7210/my/custom/api/api/v3/status/ | jq -r '.versions[]|select (.component=="file").component=="file"'
 
       - name: Test functional tests
         run: |
