@@ -41,13 +41,10 @@ jobs:
           git clone --depth 1 https://github.com/pulp/pulpcore.git
           git clone --depth 1 https://github.com/pulp/pulp-openapi-generator.git
 
-      - name: Install podman compose
-        if: matrix.TEST == 'podman' && matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt update
-          sudo apt install -y httpie podman
-          sudo pip install podman-compose
-          podman --version
+      # - name: Install httpie
+      #   run: |
+      #     sudo apt update
+      #     sudo apt install -y httpie
 
       - name: (Mac) Install docker compose
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'

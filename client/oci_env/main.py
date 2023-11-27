@@ -86,7 +86,7 @@ def parse_db_command(subparsers):
         '--migrate',
         action="store_true",
         dest='migrate',
-        help=('Run migrations after restoring the databse.')
+        help=('Run migrations after restoring the database.')
     )
     parser.set_defaults(func=db)
 

@@ -57,7 +57,12 @@ def shell(args, client):
     if args.shell == "bash":
         cmd = ["bash"]
     elif args.shell == "python":
-        cmd = ["pulpcore-manager", "shell_plus"]
+        exit(
+            client.exec_container_script(
+                f"run_python_shell.sh",
+                privileged=args.privileged,
+            ).returncode
+        )
     elif args.shell == "db":
         cmd = ["pulpcore-manager", "dbshell"]
     else:
