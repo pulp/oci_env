@@ -18,7 +18,7 @@ fi
 cd "/src/$PROJECT/"
 
 if [[ -f perftest_requirements.txt ]]; then
-    pip install -r perftest_requirements.txt
+    python3 -m pip install -r perftest_requirements.txt
 elif [[ -f functest_requirements.txt ]]; then
-    pip install -r functest_requirements.txt
+    python3 -m pip install -r functest_requirements.txt
 fi

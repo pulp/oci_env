@@ -18,5 +18,5 @@ fi
 cd "/src/$PROJECT/"
 
 if [[ -f lint_requirements.txt ]]; then
-    pip install -r lint_requirements.txt
+    python3 -m pip install -r lint_requirements.txt
 fi

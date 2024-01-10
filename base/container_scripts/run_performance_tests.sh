@@ -12,7 +12,7 @@ declare PROJECT="${PACKAGE//-/_}"
 set -e
 
 function check_pytest () {
-    sudo -u pulp -E type pytest || {
+    sudo -u pulp -E python3 -m pytest --version || {
         cat << EOF
 
 ERROR: pytest is not installed
@@ -48,4 +48,4 @@ cd "/src/$PACKAGE/"
 check_pytest
 check_client
 
-sudo -u pulp -E pytest -r sx --rootdir=/var/lib/pulp --color=yes --pyargs "$PROJECT.tests.performance" "${@:2}"
+sudo -u pulp -E python3 -m pytest -r sx --rootdir=/var/lib/pulp --color=yes --pyargs "$PROJECT.tests.performance" "${@:2}"
