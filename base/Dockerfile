@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/pulp/pulp-ci-centos:latest
+ARG BASE_IMAGE=ghcr.io/pulp/pulp-ci-centos9:latest
 FROM $BASE_IMAGE
 
 # configure S6 to use env variables
