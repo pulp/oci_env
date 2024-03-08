@@ -1,4 +1,4 @@
-# macOS troubleshooting tips
+# MacOS machines
 
 ## Setup on arm64 macOS machines 
 
