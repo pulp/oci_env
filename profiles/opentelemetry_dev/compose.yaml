@@ -38,7 +38,7 @@ services:
     volumes:
       - "{OCI_ENV_DIR}/profiles/{COMPOSE_PROFILE}/prometheus:/etc/prometheus"
     ports:
-      - "9090"
+      - "9090:9090"
 
   grafana:
     image: grafana/grafana
