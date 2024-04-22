@@ -10,7 +10,7 @@ ENV XDG_CONFIG_HOME=/opt/settings
 COPY dev_requirements.txt /dev_requirements.txt
 
 COPY switch_python /usr/bin/switch_python
-ARG PYTHON_VERSION=3.8
+ARG PYTHON_VERSION=3.9
 RUN switch_python "$PYTHON_VERSION"
 
 RUN pip3 install -r dev_requirements.txt
