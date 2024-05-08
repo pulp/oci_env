@@ -9,6 +9,9 @@ on:
       - '**'
   workflow_dispatch:
 jobs:
+  docs:
+    uses: "./.github/workflows/docs-ci.yml"
+
   integration:
     strategy:
       fail-fast: false
