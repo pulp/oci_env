@@ -11,6 +11,10 @@ then
   then
     echo "eval \"\$(LC_ALL=C _PULP_COMPLETE=bash_source pulp)\"" >> /root/.bashrc
   fi
+  if ! grep -q "install_phelpers.sh" /root/.bashrc
+  then
+    echo "source /opt/oci_env/base/container_scripts/install_phelpers.sh" >> /root/.bashrc
+  fi
   pulp --refresh-api status
 fi
 
