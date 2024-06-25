@@ -412,7 +412,7 @@ class Compose:
         except subprocess.CalledProcessError:
             _exit_no_container_found()
 
-    def exec(self, args, service=None, interactive=False, pipe_output=False, privileged=False):
+    def exec(self, args, service=None, interactive=False, pipe_output=False, privileged=False, shell=False):
         """
         Execute a script in a running container using podman or docker.
 
@@ -432,15 +432,17 @@ class Compose:
 
         if privileged:
             cmd = cmd[:2] + ["--privileged"] + cmd[2:]
+        if shell:
+            cmd = " ".join(cmd)
 
         if interactive:
             if self.is_verbose:
                 logger.info(f"Running [interactive] command in container: {' '.join(cmd)}")
-            proc = subprocess.call(cmd)
+            proc = subprocess.call(cmd, shell=shell)
         else:
             if self.is_verbose:
                 logger.info(f"Running [non-interactive] command in container: {' '.join(cmd)}")
-            proc = subprocess.run(cmd, capture_output=pipe_output)
+            proc = subprocess.run(cmd, capture_output=pipe_output, shell=shell)
         return proc
 
     def get_dynaconf_variable(self, name):

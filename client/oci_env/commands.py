@@ -200,3 +200,35 @@ def poll(args, client):
 
 def pulp(args, client):
     exit(client.exec(["pulp"] + args.command, interactive=False).returncode)
+
+
+def phelper(args, client):
+    if args.action in ("help", "status", "dbreset", "clean"):
+        proc = client.exec(["bash", "-lc", f"p{args.action}"], shell=True)
+        exit(proc.returncode)
+    shortcuts = {"api": "pulpcore-api", "content": "pulpcore-content"}
+    pcmd = [f"p{args.action}"]
+    opts = set(args.services)
+    for val in opts:
+        if val in shortcuts:
+            pcmd.append(shortcuts[val])
+        elif val.startswith("worker"):
+            # Support notation: 'worker', 'worker3', 'worker1-3'
+            worker_range = [int(i) for i in val[len("worker"):].split("-") if i.isdigit()]
+            if len(worker_range) == 1:
+                worker_range.append(worker_range[0])
+            elif len(worker_range) == 0:
+                worker_range = [1, int(client.config.get("PULP_WORKERS", 2))]
+            worker_range[1] += 1  # Increase outer bounds for range
+            for i in range(*worker_range[:3]):
+                pcmd.append(f"pulpcore-worker@{i}")
+        else:
+            pcmd.append(val)
+
+    if args.action in {"start", "restart"}:
+        if set(pcmd).intersection({"pulpcore-api", "pulpcore-content"}) and "nginx" not in opts:
+            pcmd.append("nginx")
+    cmd_str = " ".join(pcmd)
+    print(f"{args.action.capitalize()}ing {pcmd[1:] or 'all services'}")
+    proc = client.exec(["bash", "-lc", f'"{cmd_str}"'], shell=True)
+    exit(proc.returncode)
