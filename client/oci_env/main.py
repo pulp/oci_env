@@ -11,7 +11,8 @@ from oci_env.commands import (
     pulpcore_manager,
     profile,
     poll,
-    pulp
+    pulp,
+    phelper
 )
 
 from oci_env.utils import (
@@ -55,6 +56,7 @@ def get_parser():
     parse_profile_command(subparsers)
     parse_poll_command(subparsers)
     parse_pulp_cli_command(subparsers)
+    parse_phelper_commands(subparsers)
 
     return parser
 
@@ -153,6 +155,12 @@ def parse_pulp_cli_command(subparsers):
     parser.add_argument('command', nargs=argparse.REMAINDER, help='Command to pass to pulp cli.')
     parser.set_defaults(func=pulp)
 
+
+def parse_phelper_commands(subparsers):
+    for action in ("start", "stop", "restart"):
+        parser = subparsers.add_parser(f'p{action}', help=f'{action.capitalize()} all/any Pulp service')
+        parser.add_argument('services', nargs=argparse.REMAINDER, help=f'List of services to {action}, leave blank to {action} all')
+        parser.set_defaults(func=phelper, action=action)
 
 def main():
     parser = get_parser()
