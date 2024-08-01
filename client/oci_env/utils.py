@@ -350,6 +350,14 @@ class Compose:
             binary = self.config["COMPOSE_BINARY"].split() + ["-p", self.config["COMPOSE_PROJECT_NAME"]]
         return binary
 
+    @property
+    def filter_containers(self, project_name):
+        # docker compose ps ... does not support --filter name
+        binary = self.compose_base_command
+        cmd = binary + ["ps", "--format", "{{.Names}}", "|", "grep", project_name]
+        running_containers = subprocess.Popen(" ".join(cmd), shell=True, stdout=subprocess.PIPE)
+        return running_containers
+
     def compose_command(self, cmd, interactive=False, pipe_output=False):
         """
         Run a docker-compose or podman-compose command.
@@ -407,8 +415,10 @@ class Compose:
 
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
         #   WARNING: Ignoring custom format, because both --format and --quiet are set.
-        cmd = binary + ["ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
-        running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        # cmd = binary + ["ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
+        # running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        # logger.debug(running_containers)
+        running_containers = self.filter_containers(project_name)
         logger.debug(running_containers)
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
