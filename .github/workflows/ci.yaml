@@ -70,7 +70,7 @@ jobs:
       - name: (ubuntu) Define newer compose binary
         if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
         run: |
-          echo 'COMPOSE_BINARY="docker compose"' >> ${PWD}/custom.env
+          echo 'COMPOSE_BINARY=docker compose' >> ${PWD}/custom.env
 
       - name: Set environment variables
         if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
