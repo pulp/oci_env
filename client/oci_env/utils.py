@@ -354,8 +354,10 @@ class Compose:
         # docker compose ps ... does not support --filter name
         binary = self.compose_base_command
         cmd = binary + ["ps", "--format", "{{.Names}}", "|", "grep", project_name]
-        running_containers = subprocess.Popen(" ".join(cmd), shell=True, stdout=subprocess.PIPE)
-        return running_containers
+        pid = subprocess.Popen(" ".join(cmd), shell=True, stdout=subprocess.PIPE)
+        clist = pid.stdout.read().decode('utf-8').split('\n')
+        clist = [x.strip() for x in clist if x.strip()]
+        return clist
 
     def compose_command(self, cmd, interactive=False, pipe_output=False):
         """
@@ -422,11 +424,15 @@ class Compose:
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
         if service[-1].isdigit():
-            container_name = _service_containers().stdout.read().decode("utf-8").strip().split("\n")[0]
-            if service in container_name:
-                return container_name
+            # container_name = _service_containers().stdout.read().decode("utf-8").strip().split("\n")[0]
+            # if service in container_name:
+            #    return container_name
+            for container_name in running_containers:
+                if service in container_name:
+                    return container_name
 
         # Else grep only the container ending with `_1` or `-1` (the main service)
+        """
         try:
             return subprocess.check_output(
                 ("grep", '-E', ".1$"),
@@ -434,6 +440,11 @@ class Compose:
             ).decode("utf-8").strip().split("\n")[0]
         except subprocess.CalledProcessError:
             _exit_no_container_found()
+        """
+        for container_name in running_containers:
+            if container_name.endswith('_1') or container_name.endswith('-1'):
+                return container_name
+        _exit_no_container_found()
 
     def exec(self, args, service=None, interactive=False, pipe_output=False, privileged=False):
         """
