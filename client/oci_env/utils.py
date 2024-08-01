@@ -343,11 +343,11 @@ class Compose:
 
     @property
     def compose_base_command(self):
-        if " " not in self.config["COMPOSE_BINARY"]:
-            binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
-        else:
+        if self.config["COMPOSE_BINARY"] == "docker compose":
             # docker now has a "compose" subcommand and the old python docker-compose script is deprecated
             binary = self.config["COMPOSE_BINARY"].split() + ["-p", self.config["COMPOSE_PROJECT_NAME"]]
+        else:
+            binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
         return binary
 
     def filter_containers(self, project_name):
