@@ -350,7 +350,6 @@ class Compose:
             binary = self.config["COMPOSE_BINARY"].split() + ["-p", self.config["COMPOSE_PROJECT_NAME"]]
         return binary
 
-    @property
     def filter_containers(self, project_name):
         # docker compose ps ... does not support --filter name
         binary = self.compose_base_command
