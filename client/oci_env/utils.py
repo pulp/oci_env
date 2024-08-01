@@ -341,6 +341,15 @@ class Compose:
             for key in sorted(self.config.keys()):
                 logger.info(f'OCI CFG {key} = {self.config[key]}')
 
+    @property
+    def compose_base_command(self):
+        if " " not in self.config["COMPOSE_BINARY"]:
+            binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
+        else:
+            # docker now has a "compose" subcommand and the old python docker-compose script is deprecated
+            binary = self.config["COMPOSE_BINARY"].split() + ["-p", self.config["COMPOSE_PROJECT_NAME"]]
+        return binary
+
     def compose_command(self, cmd, interactive=False, pipe_output=False):
         """
         Run a docker-compose or podman-compose command.
@@ -348,11 +357,7 @@ class Compose:
         This sets the correct project name and loads up all the compose files, but
         takes in the rest of the arguments (exec, up, down, etc) from the user.
         """
-        if " " not in self.config["COMPOSE_BINARY"]:
-            binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
-        else:
-            # docker now has a "compose" subcommand and the old python docker-compose script is deprecated
-            binary = self.config["COMPOSE_BINARY"].split() + ["-p", self.config["COMPOSE_PROJECT_NAME"]]
+        binary = self.compose_base_command
 
         compose_files = []
 
@@ -378,7 +383,7 @@ class Compose:
             binary ps -q --filter name=oci_env
             --format '{{.Names}}' | grep env | grep -E '.1$'
         """
-        binary = self.config["COMPOSE_BINARY"]
+        binary = self.compose_base_command
         service = service or self.config["API_CONTAINER"]
         project_name = self.config['COMPOSE_PROJECT_NAME']
 
@@ -402,7 +407,7 @@ class Compose:
 
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
         #   WARNING: Ignoring custom format, because both --format and --quiet are set.
-        cmd = [binary, "ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
+        cmd = binary + ["ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
         running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
@@ -429,14 +434,14 @@ class Compose:
         differs between podman-compose and docker-compose.
         """
         service = service or self.config["API_CONTAINER"]
-        binary = self.config["COMPOSE_BINARY"]
+        binary = self.compose_base_command
 
         # docker fails on systems with no interactive CLI. This tells docker
         # to use a pseudo terminal when no CLI is available.
         if os.getenv("COMPOSE_INTERACTIVE_NO_CLI", "0") == "1":
-            cmd = [binary, "exec", self.container_name(service)] + args
+            cmd = binary + ["exec", self.container_name(service)] + args
         else:
-            cmd = [binary, "exec", "-it", self.container_name(service)] + args
+            cmd = binary + ["exec", "-it", self.container_name(service)] + args
 
         if privileged:
             cmd = cmd[:2] + ["--privileged"] + cmd[2:]
@@ -470,8 +475,8 @@ class Compose:
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output, privileged=privileged)
 
     def dump_container_logs(self, container_name):
-        binary = self.config["COMPOSE_BINARY"]
-        cmd = [binary, "logs", container_name]
+        binary = self.compose_base_command
+        cmd = binary + ["logs", container_name]
         pid = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
