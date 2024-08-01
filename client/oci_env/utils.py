@@ -3,7 +3,8 @@ import pathlib
 import subprocess
 import time
 
-from urllib import request
+#from urllib import request
+import requests
 
 from oci_env.logger import logger
 
@@ -507,22 +508,34 @@ class Compose:
             # re request the api root each time because it's not alwasy available until the
             # app boots
             api_root = self.get_dynaconf_variable("API_ROOT")
+            logger.debug(f'api_root:{api_root}')
             #import epdb; epdb.st()
             status_api = "{}://{}:{}{}api/v3/status/".format(
                 self.config["API_PROTOCOL"],
                 self.config["API_HOST"],
                 self.config["API_PORT"],
-                api_root,
+                '/' + api_root.lstrip('/'),
             )
             logger.debug(status_api)
+            #try:
+            #    code = request.urlopen(status_api).code
+            #    logger.debug(f'status: {code}')
+            #    if code == 200:
+            #        logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
+            #        return
+            #except:
+            #    time.sleep(wait_time)
             try:
-                code = request.urlopen(status_api).code
-                logger.debug(f'status: {code}')
-                if code == 200:
-                    logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
-                    return
-            except:
+                rr = requests.get(status_api)
+            except requests.exceptions.ConnectionError:
                 time.sleep(wait_time)
+                continue
+
+            logger.debug(f'code:{rr.status_code}')
+            if rr.status_code == 200:
+                logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
+                return
+            time.sleep(wait_time)
 
         # give the user some context as to why polling failed ...
         self.dump_container_logs(container_name)
