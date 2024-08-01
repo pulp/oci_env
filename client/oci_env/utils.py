@@ -528,6 +528,7 @@ class Compose:
             try:
                 rr = requests.get(status_api)
             except requests.exceptions.ConnectionError:
+                logger.debug(f'code:connection-error')
                 time.sleep(wait_time)
                 continue
 
