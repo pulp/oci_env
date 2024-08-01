@@ -65,6 +65,11 @@ jobs:
           echo "COMPOSE_PROJECT_NAME=my_2nd_project" >> ${PWD}/custom.env
           echo "SECOND_SERVICE_PORT=7002" >> ${PWD}/custom.env
 
+      - name: (ubuntu) Define newer compose binary
+        if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
+        run: |
+          echo 'COMPOSE_BINARY="docker compose"' >> ${PWD}/custom.env
+
       - name: setup test profiles
         run: |
           cp -r oci_env/.github/assets/profiles/* oci_env/profiles/
