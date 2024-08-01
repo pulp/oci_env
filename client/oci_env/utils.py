@@ -354,6 +354,7 @@ class Compose:
         # docker compose ps ... does not support --filter name
         binary = self.compose_base_command
         cmd = binary + ["ps", "--format", "{{.Names}}", "|", "grep", project_name]
+        logger.debug(f"RUN {' '.join(cmd)}")
         pid = subprocess.Popen(" ".join(cmd), shell=True, stdout=subprocess.PIPE)
         clist = pid.stdout.read().decode('utf-8').split('\n')
         clist = [x.strip() for x in clist if x.strip()]

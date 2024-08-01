@@ -38,6 +38,7 @@ jobs:
           echo "TEST=${{ matrix.TEST }}" >> $GITHUB_ENV
           echo "COMPOSE_INTERACTIVE_NO_CLI=1" >> $GITHUB_ENV
           #echo "OCI_ENV_PATH=${GITHUB_WORKSPACE}/oci_env/" >> $GITHUB_ENV
+          echo 'OCI_ENV_DEBUG="1"' >> $GITHUB_ENV
 
       - name: clone pulpcore, pulp-openapi-generator
         run: |
@@ -63,6 +64,7 @@ jobs:
           echo "API_PORT=7210" >> ${PWD}/custom.env
           echo "DOCS_PORT=12346" >> ${PWD}/custom.env
           echo "COMPOSE_PROJECT_NAME=my_2nd_project" >> ${PWD}/custom.env
+          echo "SECOND_SERVICE_PORT=7002" >> ${PWD}/custom.env
           echo "SECOND_SERVICE_PORT=7002" >> ${PWD}/custom.env
 
       - name: (ubuntu) Define newer compose binary
