@@ -409,6 +409,7 @@ class Compose:
         #   WARNING: Ignoring custom format, because both --format and --quiet are set.
         cmd = binary + ["ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
         running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        logger.debug(running_containers)
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
         if service[-1].isdigit():
