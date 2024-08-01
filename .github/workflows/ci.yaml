@@ -56,11 +56,15 @@ jobs:
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
         uses: docker-practice/actions-setup-docker@1.0.11
 
+      #- name: (Linux) Install docker compose 
+      #  if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
+      #  uses: KengoTODA/actions-setup-docker-compose@v1
+      #  with:
+      #    version: '2.14.2' # the full version of `docker-compose` command
       - name: (Linux) Install docker compose 
         if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
-        uses: KengoTODA/actions-setup-docker-compose@v1
-        with:
-          version: '2.14.2' # the full version of `docker-compose` command
+        run: |
+          echo "skipping"
 
       - name: setup .compose.env files
         run: |
