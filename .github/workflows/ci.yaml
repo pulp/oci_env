@@ -53,7 +53,8 @@ jobs:
           podman --version
 
       - name: (Mac) Install docker compose
-        if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
+        # if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
+        if: matrix.TEST == 'docker'
         uses: docker-practice/actions-setup-docker@1.0.11
 
       - name: setup .compose.env files
