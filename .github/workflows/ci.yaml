@@ -65,7 +65,7 @@ jobs:
         if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
         run: |
           # echo "skipping"
-          curl -L -o /tmp/docker-compose https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-darwin-x86_64
+          curl -L -o /tmp/docker-compose https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64
           install /tmp/docker-compose /usr/local/bin/
 
       - name: setup .compose.env files
