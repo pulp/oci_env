@@ -360,6 +360,8 @@ class Compose:
         pid = subprocess.Popen(" ".join(cmd), shell=True, stdout=subprocess.PIPE)
         clist = pid.stdout.read().decode('utf-8').split('\n')
         clist = [x.strip() for x in clist if x.strip()]
+        # force the old docker-compose names ...
+        clist = [x.replace(self.config["COMPOSE_PROJECT_NAME"] + '-', '') for x in clist]
         return clist
 
     def compose_command(self, cmd, interactive=False, pipe_output=False):
@@ -409,44 +411,25 @@ class Compose:
             )
             exit(1)
 
-        def _service_containers():
-            """# Grep for the service name. e.g: pulp"""
-            return subprocess.Popen(
-                ("grep", service),
-                stdin=running_containers.stdout,
-                stdout=subprocess.PIPE
-            )
-
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
-        #   WARNING: Ignoring custom format, because both --format and --quiet are set.
-        # cmd = binary + ["ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
-        # running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        # logger.debug(running_containers)
         running_containers = self.filter_containers(project_name)
-        logger.debug(running_containers)
+        logger.debug(f'running containers: {running_containers}')
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
         if service[-1].isdigit():
-            # container_name = _service_containers().stdout.read().decode("utf-8").strip().split("\n")[0]
-            # if service in container_name:
-            #    return container_name
             for container_name in running_containers:
                 if service in container_name:
+                    logger.debug(f'found container {container_name}')
                     return container_name
 
         # Else grep only the container ending with `_1` or `-1` (the main service)
-        """
-        try:
-            return subprocess.check_output(
-                ("grep", '-E', ".1$"),
-                stdin=_service_containers().stdout
-            ).decode("utf-8").strip().split("\n")[0]
-        except subprocess.CalledProcessError:
-            _exit_no_container_found()
-        """
         for container_name in running_containers:
             if container_name.endswith('_1') or container_name.endswith('-1'):
+                logger.debug(f'found container {container_name}')
+                container_name = container_name.rstrip('-1')
+                container_name = container_name.rstrip('_1')
                 return container_name
+
         _exit_no_container_found()
 
     def exec(self, args, service=None, interactive=False, pipe_output=False, privileged=False):
@@ -458,14 +441,15 @@ class Compose:
         differs between podman-compose and docker-compose.
         """
         service = service or self.config["API_CONTAINER"]
+        container_name = self.container_name(service)
         binary = self.compose_base_command
 
         # docker fails on systems with no interactive CLI. This tells docker
         # to use a pseudo terminal when no CLI is available.
         if os.getenv("COMPOSE_INTERACTIVE_NO_CLI", "0") == "1":
-            cmd = binary + ["exec", self.container_name(service)] + args
+            cmd = binary + ["exec", container_name] + args
         else:
-            cmd = binary + ["exec", "-it", self.container_name(service)] + args
+            cmd = binary + ["exec", "-it", container_name] + args
 
         if privileged:
             cmd = cmd[:2] + ["--privileged"] + cmd[2:]
@@ -478,6 +462,7 @@ class Compose:
             if self.is_verbose:
                 logger.info(f"Running [non-interactive] command in container: {' '.join(cmd)}")
             proc = subprocess.run(cmd, capture_output=pipe_output)
+        #logger.debug(f'stdout: {proc.stdout.decode("utf-8")}')
         return proc
 
     def get_dynaconf_variable(self, name):
@@ -522,14 +507,18 @@ class Compose:
             # re request the api root each time because it's not alwasy available until the
             # app boots
             api_root = self.get_dynaconf_variable("API_ROOT")
+            #import epdb; epdb.st()
             status_api = "{}://{}:{}{}api/v3/status/".format(
                 self.config["API_PROTOCOL"],
                 self.config["API_HOST"],
                 self.config["API_PORT"],
                 api_root,
             )
+            logger.debug(status_api)
             try:
-                if request.urlopen(status_api).code == 200:
+                code = request.urlopen(status_api).code
+                logger.debug(f'status: {code}')
+                if code == 200:
                     logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
                     return
             except:
