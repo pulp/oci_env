@@ -352,7 +352,7 @@ class Compose:
             binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
         else:
             # docker now has a "compose" subcommand and the old python docker-compose script is deprecated
-            binary = [self.config["COMPOSE_BINARY"], "-p", self.config["COMPOSE_PROJECT_NAME"]]
+            binary = self.config["COMPOSE_BINARY"].split() + ["-p", self.config["COMPOSE_PROJECT_NAME"]]
 
         compose_files = []
 
