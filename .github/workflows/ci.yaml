@@ -56,6 +56,12 @@ jobs:
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
         uses: docker-practice/actions-setup-docker@1.0.11
 
+      - name: (Linux) Install docker compose 
+        if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
+        run: |
+          curl -L -o /tmp/docker-compose https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64
+          install /tmp/docker-compose /usr/local/bin/
+
       - name: setup .compose.env files
         run: |
           cp oci_env/.github/assets/${TEST}_compose.env oci_env/compose.env
