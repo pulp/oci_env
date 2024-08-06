@@ -3,7 +3,8 @@ import pathlib
 import subprocess
 import time
 
-from urllib import request
+#from urllib import request
+import requests
 
 from oci_env.logger import logger
 
@@ -341,6 +342,29 @@ class Compose:
             for key in sorted(self.config.keys()):
                 logger.info(f'OCI CFG {key} = {self.config[key]}')
 
+    @property
+    def compose_base_command(self):
+        cmd = self.config["COMPOSE_BINARY"]
+        cmd = cmd.replace('"', "").replace("'", "")
+        if cmd == "docker compose":
+            # docker now has a "compose" subcommand and the old python docker-compose script is deprecated
+            binary = cmd.split() + ["-p", self.config["COMPOSE_PROJECT_NAME"]]
+        else:
+            binary = [cmd + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
+        return binary
+
+    def filter_containers(self, project_name):
+        # docker compose ps ... does not support --filter name
+        binary = self.compose_base_command
+        cmd = binary + ["ps", "--format", "{{.Names}}", "|", "grep", project_name]
+        logger.debug(f"RUN {' '.join(cmd)}")
+        pid = subprocess.Popen(" ".join(cmd), shell=True, stdout=subprocess.PIPE)
+        clist = pid.stdout.read().decode('utf-8').split('\n')
+        clist = [x.strip() for x in clist if x.strip()]
+        # force the old docker-compose names ...
+        clist = [x.replace(self.config["COMPOSE_PROJECT_NAME"] + '-', '') for x in clist]
+        return clist
+
     def compose_command(self, cmd, interactive=False, pipe_output=False):
         """
         Run a docker-compose or podman-compose command.
@@ -348,7 +372,7 @@ class Compose:
         This sets the correct project name and loads up all the compose files, but
         takes in the rest of the arguments (exec, up, down, etc) from the user.
         """
-        binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
+        binary = self.compose_base_command
 
         compose_files = []
 
@@ -374,7 +398,7 @@ class Compose:
             binary ps -q --filter name=oci_env
             --format '{{.Names}}' | grep env | grep -E '.1$'
         """
-        binary = self.config["COMPOSE_BINARY"]
+        binary = self.compose_base_command
         service = service or self.config["API_CONTAINER"]
         project_name = self.config['COMPOSE_PROJECT_NAME']
 
@@ -388,33 +412,26 @@ class Compose:
             )
             exit(1)
 
-        def _service_containers():
-            """# Grep for the service name. e.g: pulp"""
-            return subprocess.Popen(
-                ("grep", service),
-                stdin=running_containers.stdout,
-                stdout=subprocess.PIPE
-            )
-
         # List all containers that match the PROJECT_NAME pattern. e.g: oci_env
-        #   WARNING: Ignoring custom format, because both --format and --quiet are set.
-        cmd = [binary, "ps", "--filter", f"name={project_name}", "--format", "{{.Names}}"]
-        running_containers = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        running_containers = self.filter_containers(project_name)
+        logger.debug(f'running containers: {running_containers}')
 
         # Does the user passed a specific container number? e.g: `oci-env exec -s pulp-2 ls`
         if service[-1].isdigit():
-            container_name = _service_containers().stdout.read().decode("utf-8").strip().split("\n")[0]
-            if service in container_name:
-                return container_name
+            for container_name in running_containers:
+                if service in container_name:
+                    logger.debug(f'found container {container_name}')
+                    return container_name
 
         # Else grep only the container ending with `_1` or `-1` (the main service)
-        try:
-            return subprocess.check_output(
-                ("grep", '-E', ".1$"),
-                stdin=_service_containers().stdout
-            ).decode("utf-8").strip().split("\n")[0]
-        except subprocess.CalledProcessError:
-            _exit_no_container_found()
+        for container_name in running_containers:
+            if container_name.endswith('_1') or container_name.endswith('-1'):
+                logger.debug(f'found container {container_name}')
+                container_name = container_name.rstrip('-1')
+                container_name = container_name.rstrip('_1')
+                return container_name
+
+        _exit_no_container_found()
 
     def exec(self, args, service=None, interactive=False, pipe_output=False, privileged=False):
         """
@@ -425,14 +442,15 @@ class Compose:
         differs between podman-compose and docker-compose.
         """
         service = service or self.config["API_CONTAINER"]
-        binary = self.config["COMPOSE_BINARY"]
+        container_name = self.container_name(service)
+        binary = self.compose_base_command
 
         # docker fails on systems with no interactive CLI. This tells docker
         # to use a pseudo terminal when no CLI is available.
         if os.getenv("COMPOSE_INTERACTIVE_NO_CLI", "0") == "1":
-            cmd = [binary, "exec", self.container_name(service)] + args
+            cmd = binary + ["exec", container_name] + args
         else:
-            cmd = [binary, "exec", "-it", self.container_name(service)] + args
+            cmd = binary + ["exec", "-it", container_name] + args
 
         if privileged:
             cmd = cmd[:2] + ["--privileged"] + cmd[2:]
@@ -445,6 +463,7 @@ class Compose:
             if self.is_verbose:
                 logger.info(f"Running [non-interactive] command in container: {' '.join(cmd)}")
             proc = subprocess.run(cmd, capture_output=pipe_output)
+        #logger.debug(f'stdout: {proc.stdout.decode("utf-8")}')
         return proc
 
     def get_dynaconf_variable(self, name):
@@ -466,8 +485,8 @@ class Compose:
         return self.exec(cmd, interactive=interactive, pipe_output=pipe_output, privileged=privileged)
 
     def dump_container_logs(self, container_name):
-        binary = self.config["COMPOSE_BINARY"]
-        cmd = [binary, "logs", container_name]
+        binary = self.compose_base_command
+        cmd = binary + ["logs", container_name]
         pid = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
@@ -489,18 +508,35 @@ class Compose:
             # re request the api root each time because it's not alwasy available until the
             # app boots
             api_root = self.get_dynaconf_variable("API_ROOT")
+            logger.debug(f'api_root:{api_root}')
+            #import epdb; epdb.st()
             status_api = "{}://{}:{}{}api/v3/status/".format(
                 self.config["API_PROTOCOL"],
                 self.config["API_HOST"],
                 self.config["API_PORT"],
-                api_root,
+                '/' + api_root.lstrip('/'),
             )
+            logger.debug(status_api)
+            #try:
+            #    code = request.urlopen(status_api).code
+            #    logger.debug(f'status: {code}')
+            #    if code == 200:
+            #        logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
+            #        return
+            #except:
+            #    time.sleep(wait_time)
             try:
-                if request.urlopen(status_api).code == 200:
-                    logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
-                    return
-            except:
+                rr = requests.get(status_api)
+            except requests.exceptions.ConnectionError:
+                logger.debug(f'code:connection-error')
                 time.sleep(wait_time)
+                continue
+
+            logger.debug(f'code:{rr.status_code}')
+            if rr.status_code == 200:
+                logger.info(f"[{container_name}] {status_api} online after {(i * wait_time)} seconds")
+                return
+            time.sleep(wait_time)
 
         # give the user some context as to why polling failed ...
         self.dump_container_logs(container_name)
