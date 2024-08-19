@@ -14,7 +14,6 @@ DEV_SOURCE_PATH=pulpcore
 # These three values must be different from the api port, docs port and project name for any other
 # instances of the environment that are running to avoid conflicts.
 API_PORT=4002
-DOCS_PORT=12346
 COMPOSE_PROJECT_NAME=test
 
 # If you want to use a different directory for your git checkouts you can set this

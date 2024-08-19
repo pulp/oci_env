@@ -112,7 +112,6 @@ DEV_SOURCE_PATH=pulpcore
 # These three values must be different from the api port, docs port and project name for any other
 # instances of the environment that are running to avoid conflicts.
 API_PORT=4002
-DOCS_PORT=12346
 COMPOSE_PROJECT_NAME=test
 
 # If you want to use a different directory for your git checkouts you can set this
@@ -205,15 +204,11 @@ address for the publicly facing network interface on the host.
 
 #### Building docs
 
-First, navigate to `/src/{plugin}/docs` in the container and do the following:
-```
-pip3 install -r ../doc_requirements.txt
-make clean && make diagrams && make html
-python3 -m http.server ${DOCS_PORT}
-```
+Install the docs building utility from https://github.com/pulp/pulp-docs.
 
-Then, visit `0.0.0.0:${DOCS_PORT}` in a web browser to preview the documentation.
+Then, run `make docs` and `make servedocs`. You can install the utility and run these commands outside of oci-env.
 
+The docs are served on the URL logged by the `make servedocs` step.
 
 ### Unit
 
