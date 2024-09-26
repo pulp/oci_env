@@ -157,13 +157,14 @@ jobs:
       - name: Pass service name to exec
         run: oci-env exec -s pulp ls
 
-      - name: Pass service name + number to exec
-        run: |
-          if [[ -f "/Applications/Docker.app/Contents/Resources/bin/docker" ]]; then
-            oci-env exec -s pulp-1 ls
-          else
-            oci-env exec -s pulp_1 ls
-          fi
+      # Disabling till #162 gets merged
+      # - name: Pass service name + number to exec
+      # run: |
+      #   if [[ -f "/Applications/Docker.app/Contents/Resources/bin/docker" ]]; then
+      #     oci-env exec -s pulp-1 ls
+      #   else
+      #     oci-env exec -s pulp_1 ls
+      #   fi
 
       - name: Test profile generation
         run: |

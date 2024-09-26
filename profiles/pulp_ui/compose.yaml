@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  ui:
+    build:
+      context: "{SRC_DIR}/{RELATIVE_UI_PATH}"
+    ports:
+      - "8002:8002"
+    volumes:
+      - "{SRC_DIR}/{RELATIVE_UI_PATH}:/pulp/app:z"
+    tmpfs:
+      # Forces npm to ignore the node_modules in the volume and look
+      # for it in ../node_modules instead, while still being able to write .cache
+      - "/pulp/app/node_modules"
+    depends_on:
+      - pulp
+    environment:
+      - "API_PROXY_HOST=pulp"
+      - "API_PROXY_PORT={API_PORT}"
