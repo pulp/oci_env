@@ -11,6 +11,12 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
@@ -22,12 +28,107 @@
   "liveNow": false,
   "panels": [
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "builder",
+          "expr": "pulp_disk_usage_Bytes",
+          "legendFormat": "{{domain_name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Disk Usage by Domain",
+      "type": "timeseries"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 9
       },
       "id": 13,
       "panels": [],
@@ -101,7 +202,7 @@
         "h": 8,
         "w": 7,
         "x": 0,
-        "y": 1
+        "y": 10
       },
       "id": 9,
       "options": {
@@ -124,7 +225,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "histogram_quantile(0.99, sum by(le) (rate(pulp_http_server_duration_milliseconds_bucket{exported_job=\"pulp-content\"}[5m])))",
+          "expr": "histogram_quantile(0.99, sum by(le) (rate(pulp_http_server_duration_milliseconds_bucket{exported_job=\"pulp-content\"}[$__rate_interval])))",
           "fullMetaSearch": false,
           "includeNullMetadata": false,
           "instant": false,
@@ -141,7 +242,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "histogram_quantile(0.95, sum by(le) (rate(pulp_http_server_duration_milliseconds_bucket{exported_job=\"pulp-content\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by(le) (rate(pulp_http_server_duration_milliseconds_bucket{exported_job=\"pulp-content\"}[$__rate_interval])))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
@@ -159,7 +260,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "histogram_quantile(0.5, sum by(le) (rate(pulp_http_server_duration_milliseconds_bucket{exported_job=\"pulp-content\"}[5m])))",
+          "expr": "histogram_quantile(0.5, sum by(le) (rate(pulp_http_server_duration_milliseconds_bucket{exported_job=\"pulp-content\"}[$__rate_interval])))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
@@ -237,106 +338,7 @@
         "h": 8,
         "w": 7,
         "x": 7,
-        "y": 1
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-content\", http_status_code!=\"5..\"}[5m])",
-          "fullMetaSearch": false,
-          "includeNullMetadata": false,
-          "instant": false,
-          "legendFormat": "{{http_status_code}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "Request rate for status code != 5xx",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 14,
-        "y": 1
+        "y": 10
       },
       "id": 17,
       "options": {
@@ -355,15 +357,16 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${datasource}"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-content\", http_status_code!=\"5..\"}[5m]))",
+          "expr": "sum(rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-content\", http_status_code!=\"5..\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "__auto",
+          "interval": "2m",
+          "legendFormat": "[2xx, 3xx, 4xx]",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -375,18 +378,19 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-content\", http_status_code=\"5..\"}[5m])",
+          "expr": "rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-content\", http_status_code=\"5..\"}[$__rate_interval])",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
           "instant": false,
+          "interval": "2m",
           "legendFormat": "__auto",
           "range": true,
           "refId": "B",
           "useBackend": false
         }
       ],
-      "title": "Request rate of [2xx,3xx,4xx] against 5xx",
+      "title": "[Content] Request rate of [2xx,3xx,4xx] against 5xx (2min step)",
       "type": "timeseries"
     },
     {
@@ -395,7 +399,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 18
       },
       "id": 12,
       "panels": [],
@@ -470,7 +474,7 @@
         "h": 8,
         "w": 7,
         "x": 0,
-        "y": 10
+        "y": 19
       },
       "id": 6,
       "options": {
@@ -606,106 +610,7 @@
         "h": 8,
         "w": 7,
         "x": 7,
-        "y": 10
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-api\", http_status_code!=\"5..\"}[5m])",
-          "fullMetaSearch": false,
-          "includeNullMetadata": false,
-          "instant": false,
-          "legendFormat": "{{http_status_code}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "Request rate for status code != 5xx",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 14,
-        "y": 10
+        "y": 19
       },
       "id": 16,
       "options": {
@@ -728,10 +633,11 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-api\", http_status_code!=\"5..\"}[5m]))",
+          "expr": "sum(rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-api\", http_status_code!=\"5..\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
+          "interval": "2m",
           "legendFormat": "[2xx, 3xx, 4xx]",
           "range": true,
           "refId": "A",
@@ -744,31 +650,32 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-api\", http_status_code=\"5..\"}[5m]))",
+          "expr": "sum(rate(pulp_http_server_duration_milliseconds_count{exported_job=\"pulp-api\", http_status_code=\"5..\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
           "instant": false,
+          "interval": "2m",
           "legendFormat": "5xx requests",
           "range": true,
           "refId": "B",
           "useBackend": false
         }
       ],
-      "title": "Request rate of [2xx,3xx,4xx] against 5xx",
+      "title": "[API] Request rate of [2xx,3xx,4xx] against 5xx (2min step)",
       "type": "timeseries"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 38,
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "Prometheus",
-          "value": "PBFA97CFB590B2093"
+          "selected": true,
+          "text": "crcs02ue1-prometheus",
+          "value": "PDD8BE47D10408F45"
         },
         "hide": 0,
         "includeAll": false,
@@ -776,6 +683,7 @@
         "name": "datasource",
         "options": [],
         "query": "prometheus",
+        "queryValue": "crcs",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -789,8 +697,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Pulp Insights",
+  "title": "Pulp Metrics",
   "uid": "e50bb9f2-372c-4e94-aa61-fe1f1554812c",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

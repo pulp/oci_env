@@ -13,6 +13,13 @@ processors:
   memory_limiter:
     check_interval: 1s
     limit_mib: 4000
+  transform:
+    error_mode: ignore
+    metric_statements:
+      - context: metric
+        statements:
+         - set(description, "Duration of HTTP server requests.") where name == "http.server.duration"
+         - set(description, "Number of active HTTP server requests.") where name == "http.server.active_requests"
 
 exporters:
   prometheus:
@@ -33,11 +40,6 @@ extensions:
     endpoint: 0.0.0.0:55679
 
 service:
-#   telemetry:
-#     metrics:
-#       level: detailed
-#       address: 0.0.0.0:8888
-
   extensions: []
   pipelines:
     traces:
@@ -46,7 +48,7 @@ service:
       exporters: [otlp/jaeger]
     metrics:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
+      processors: [transform, batch, memory_limiter]
       exporters: [logging, prometheus]
     logs:
       receivers: [otlp]
