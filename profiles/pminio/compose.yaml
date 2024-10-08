@@ -8,12 +8,12 @@ services:
       - "MINIO_SECRET_KEY={S3_SECRET_KEY}"
     ports:
       - "{MINIO_PORT}:9000"
-      - "{MINIO_CONSOLE_PORT}:9090"
+      - "{MINIO_CONSOLE_PORT}:9091"
     volumes:
       - "oci_pminio:/data"
     depends_on:
       - pulp
-    command: "server /data --console-address ':9090'"
+    command: "server /data --console-address ':9091'"
 
 volumes:
   oci_pminio:
