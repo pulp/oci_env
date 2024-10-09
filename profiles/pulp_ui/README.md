@@ -2,7 +2,7 @@
 
 ## Usage
 
-Provides a container that runs the Pulp UI from source. This requires https://github.com/pulp/pulp-ui to be checked out on your system.
+Provides a container that runs the Pulp UI from source. This requires https://github.com/pulp/pulp-ui to be checked out on your system. The UI is available at http://localhost:8002.
 
 ## Extra Variables
 
