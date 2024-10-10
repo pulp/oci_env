@@ -1,1 +1,1 @@
-dynaconf get $1
+dynaconf get $1 2>/dev/null
