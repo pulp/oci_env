@@ -15,6 +15,8 @@ RUN switch_python "$PYTHON_VERSION"
 
 RUN pip3 install -r dev_requirements.txt
 
+RUN dnf -y install gettext
+
 COPY settings.py /etc/pulp/settings.py
 COPY s6-rc.d/oci-env-prepare/ /etc/s6-overlay/s6-rc.d/oci-env-prepare/
 COPY s6-rc.d/oci-env-profiles /etc/s6-overlay/s6-rc.d/oci-env-profiles/
