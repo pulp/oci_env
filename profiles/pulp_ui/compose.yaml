@@ -17,3 +17,4 @@ services:
     environment:
       - "API_PROXY_HOST=pulp"
       - "API_PROXY_PORT={API_PORT}"
+      - "API_PROXY={API_PROTOCOL}://pulp:{API_PORT}"
