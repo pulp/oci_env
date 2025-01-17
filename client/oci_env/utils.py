@@ -2,6 +2,7 @@ import os
 import pathlib
 import subprocess
 import time
+import sys
 
 from urllib import request
 
@@ -345,6 +346,8 @@ class Compose:
         takes in the rest of the arguments (exec, up, down, etc) from the user.
         """
         binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
+        if sys.platform.lower() == "darwin" and self.config["COMPOSE_BINARY"] == "docker":
+            binary = [self.config["COMPOSE_BINARY"], "compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
 
         compose_files = []
 
