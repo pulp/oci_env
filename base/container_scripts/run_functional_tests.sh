@@ -4,11 +4,6 @@ declare PACKAGE="$1"
 
 set -e
 
-if [ $PACKAGE == "pulp_file" ]
-then
-    declare PACKAGE="pulpcore"
-fi
-
 declare PROJECT="${PACKAGE//-/_}"
 
 function check_pytest () {
@@ -43,7 +38,12 @@ EOF
 
 source "/opt/oci_env/base/container_scripts/configure_pulp_smash.sh"
 
-cd "/src/$PACKAGE/"
+if [ $PACKAGE == "pulp_file" ]
+then
+    cd "/src/pulpcore/${PACKAGE}"
+else
+    cd "/src/$PACKAGE/"
+fi
 
 check_pytest
 check_client
