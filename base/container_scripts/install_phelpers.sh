@@ -43,7 +43,7 @@ pdbreset() {
 }
 _pdbreset_help="Reset the Pulp database"
 # can get away with not resetting terminal settings here since it gets reset in phelp
-_pdbreset_help="$_dbreset_help - `setterm -foreground red -bold on`THIS DESTROYS YOUR PULP DATA"
+_pdbreset_help="$_pdbreset_help - `setterm -foreground red -bold on`THIS DESTROYS YOUR PULP DATA"
 
 pclean() {
     pdbreset
