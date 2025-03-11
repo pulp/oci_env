@@ -3,11 +3,15 @@
 Before we start, make sure you have at least one of the two installed:
 
 - [docker-compose installation docs](https://docs.docker.com/compose/install/)
-- [podman-compose installation docs](https://github.com/containers/podman-compose#installation)
+- [podman-compose installation docs](https://github.com/containers/podman-compose#installation) (version 1.2 is required)
+
+All mentioned repositories in this tutorial can be cloned from [here](https://github.com/pulp).
 
 Also, here are some useful things about the CLI:
 - It has all the functionality required to run the OCI Env developer environment.
 See `oci-env --help` for a list of supported commands.
+- It contains "p commands" to ease the management of pulp component services, such as the workers
+(API, content and tasking) and the PostgreSQL DB. See `oci-env phelp` for a list of supported commands.
 - It can be run in the `oci_env/` root dir.
 - It can be executed from anywhere by setting the `OCI_ENV_PATH` environment variable to the `oci_env/` project root dir.
 
@@ -34,6 +38,9 @@ pip3 install -e client
 └── any_other_python_sources
 ```
 
+The minimal requirements are `oci_env` and `pulpcore`. `pulp-openapi-generator` is necessary for running tests.
+`pulp_ansible` and `pulp_container` serve as examples of optional plugins.
+
 The OCI env project should be in the same directory as any pulp plugins you wish to run.
 
 Note, the `/src/` folder in the container is the parent folder containing the `oci_env` and all
@@ -43,13 +50,10 @@ plugin checkouts on the container host.
 
 `cp compose.env.example compose.env`
 
-A minimal `compose.env` will look something like this:
+A minimal `compose.env` with one optional ansible plugin will look something like this:
 
 ```
 DEV_SOURCE_PATH=pulpcore:pulp_ansible
-
-# this is set to podman by default.
-COMPOSE_BINARY=docker
 ```
 
 In this example, `../pulpcore` and `../pulp_ansible` will be installed from source. Other settings
@@ -59,6 +63,7 @@ include:
   used to launch a UI, set up an authentication provider service or configure an object store.
   Example `COMPOSE_PROFILE=ha:galaxy_ng/ui`. This will use the `ha` profile from `oci_env/profiles/`
   and the `ui` profile from `galaxy_ng/profiles/`
+- `COMPOSE_BINARY`: program to use for compose. This can be either docker or podman, defaults to podman
 - `PULP_<SETTING_NAME>`: set any setting.py value for your environment. Example: `PULP_GALAXY_REQUIRE_CONTENT_APPROVAL=False`
 
 ## 4. Run the environment
@@ -87,7 +92,7 @@ You can also launch the environment in the background with `oci-env compose up -
 and access the logs with `oci-env compose logs -f` if you don't want to run it in the foreground.
 
 In case you have problems with setup in macOS, check these
-[troubleshooting tips](site:oci_env/docs/dev/guides/macos_troubleshooting_tips.md). 
+[troubleshooting tips](site:oci_env/docs/dev/guides/troubleshooting/macos_troubleshooting_tips).
 
 ## 5. Teardown
 
@@ -95,10 +100,12 @@ When you are done, you can tear down your container.
 Data in your system will be preserved when you restart it, or you can choose to tear down the volumes as well:
 
 ```bash
-# Preserve data
-oci-env compose up
+# tear down container but preserve data
+oci-env compose down
 
-# Tear down data
-oci-env compose down --volumes  # Shut down the containers and delete all the container data on your system
-oci-env db reset # alias
+# tear down container and delete data
+oci-env compose down --volumes
+
+# or reset data only and rerun migrations
+oci-env db reset
 ```
