@@ -123,7 +123,7 @@ jobs:
 
       - name: Test functional tests
         run: |
-          oci-env -v generate-client -i
+          oci-env -v generate-client -i pulpcore
           oci-env -v generate-client -i pulp_file
           oci-env -v test -i -p pulpcore functional -k test_labels
 

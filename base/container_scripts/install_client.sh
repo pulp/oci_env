@@ -6,4 +6,5 @@ declare PROJECT="$1"
 
 cd "/src/pulp-openapi-generator/$PROJECT-client"
 
-pip3 install -e .
+# Editable installs are currently broken for the new client
+pip install .
