@@ -5,7 +5,7 @@ A developer environment for pulp based off of the [Pulp OCI Images](https://gith
 ## Getting started
 
 A detailed guide on setting up the development environment is available
-[here](site:oci_env/docs/dev/tutorials/quickstart).
+[here](staging_docs/dev/tutorials/quickstart.md).
 
 ## Multiple environments
 
