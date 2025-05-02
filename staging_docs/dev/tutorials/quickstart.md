@@ -8,6 +8,7 @@ Before we start, make sure you have at least one of the two installed:
 All mentioned repositories in this tutorial can be cloned from [here](https://github.com/pulp).
 
 Also, here are some useful things about the CLI:
+
 - It has all the functionality required to run the OCI Env developer environment.
 See `oci-env --help` for a list of supported commands.
 - It contains "p commands" to ease the management of pulp component services, such as the workers
@@ -64,7 +65,7 @@ include:
   Example `COMPOSE_PROFILE=ha:galaxy_ng/ui`. This will use the `ha` profile from `oci_env/profiles/`
   and the `ui` profile from `galaxy_ng/profiles/`
 - `COMPOSE_BINARY`: program to use for compose. This can be either docker or podman, defaults to podman
-- `PULP_<SETTING_NAME>`: set any setting.py value for your environment. Example: `PULP_GALAXY_REQUIRE_CONTENT_APPROVAL=False`
+- `PULP_<SETTING_NAME>`: set any settings.py value for your environment. Example: `PULP_GALAXY_REQUIRE_CONTENT_APPROVAL=False`
 
 ## 4. Run the environment
 
@@ -76,7 +77,7 @@ oci-env compose build
 oci-env compose up
 ```
 
-The `oci-env compose` command accepts all the same arguments as `podman-compose` or `docker-compose`
+The `oci-env compose` command accepts all the same arguments as `podman-compose` or `docker compose`
 
 By default, the API will be served from `http://localhost:5001/pulp/api/v3/`.
 You can log in with `admin`/`password` by default. E.g.:
