@@ -15,8 +15,6 @@ then
     exit 1
 fi
 
-pip install git+https://github.com/pulp/pulp-smash.git
-
 cd "/src/$PROJECT/"
 
 if [[ -f unittest_requirements.txt ]]; then

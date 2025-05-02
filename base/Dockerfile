@@ -4,9 +4,6 @@ FROM $BASE_IMAGE
 # configure S6 to use env variables
 ENV S6_KEEP_ENV=1
 
-# Set XDG_CONFIG_HOME variable for the pulp_smash settings lookup
-ENV XDG_CONFIG_HOME=/opt/settings
-
 COPY dev_requirements.txt /dev_requirements.txt
 
 COPY switch_python /usr/bin/switch_python

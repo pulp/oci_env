@@ -41,8 +41,6 @@ EOF
     }
 }
 
-source "/opt/oci_env/base/container_scripts/configure_pulp_smash.sh"
-
 cd "/src/$PACKAGE/"
 
 check_pytest
