@@ -2,12 +2,12 @@
 
 declare PACKAGE="$1"
 
-if [ $PACKAGE == "pulp_file" ]
+declare PROJECT="${PACKAGE//-/_}"
+
+if [[ ${PACKAGE} == "pulp_file" || ${PACKAGE} == "pulp_certguard" ]]
 then
     declare PACKAGE="pulpcore"
 fi
-
-declare PROJECT="${PACKAGE//-/_}"
 
 set -e
 
@@ -41,9 +41,9 @@ EOF
     }
 }
 
-cd "/src/$PACKAGE/"
+cd "/src/${PACKAGE}/"
 
 check_pytest
 check_client
 
-sudo -u pulp -E pytest -r sx --rootdir=/var/lib/pulp --color=yes --pyargs "$PROJECT.tests.performance" "${@:2}"
+sudo -u pulp -E pytest -r sx --rootdir=/var/lib/pulp --color=yes --pyargs "${PROJECT}.tests.performance" "${@:2}"
