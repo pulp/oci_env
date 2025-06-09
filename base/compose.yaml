@@ -7,7 +7,8 @@ services:
       context: "{OCI_ENV_DIR}/base/"
       dockerfile: "Dockerfile"
     image: "localhost/oci_env/pulp:base"
-    entrypoint: "/bin/true"
+    # workaround for pulp service hanging while waiting for _base to be on running state
+    entrypoint: "/bin/sleep 1"
 
   pulp:
     image: "localhost/oci_env/pulp:base"
