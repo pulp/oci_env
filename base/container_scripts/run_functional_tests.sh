@@ -1,15 +1,16 @@
 #!/bin/bash
 
 declare PACKAGE="$1"
+declare PROJECT="${PACKAGE//-/_}"
 
 set -e
 
-if [ $PACKAGE == "pulp_file" ]
+if [[ ${PACKAGE} == "pulp_file" || ${PACKAGE} == "pulp_certguard" ]]
 then
     declare PACKAGE="pulpcore"
 fi
 
-declare PROJECT="${PACKAGE//-/_}"
+cd "/src/${PACKAGE}/"
 
 function check_pytest () {
     sudo -u pulp -E type pytest || {
@@ -41,9 +42,7 @@ EOF
     }
 }
 
-cd "/src/$PACKAGE/"
-
 check_pytest
 check_client
 
-sudo -u pulp -E pytest -r sx --rootdir=/var/lib/pulp --color=yes --pyargs "$PROJECT.tests.functional" "${@:2}"
+sudo -u pulp -E pytest -r sx --rootdir=/var/lib/pulp --color=yes --pyargs "${PROJECT}.tests.functional" "${@:2}"

@@ -1,16 +1,15 @@
 #!/bin/bash
 
 declare PACKAGE="$1"
+declare PROJECT="${PACKAGE//-/_}"
 
-if [ $PACKAGE == "pulp_file" ]
+if [[ ${PACKAGE} == "pulp_file" || ${PACKAGE} == "pulp_certguard" ]]
 then
     declare PACKAGE="pulpcore"
 fi
 
-declare PROJECT="${PACKAGE//-/_}"
-
 set -e
 
-cd "/src/$PACKAGE/"
+cd "/src/${PACKAGE}/"
 
-sudo -u pulp -E PULP_DATABASES__default__USER=postgres pytest -r sx --color=yes --pyargs "$PROJECT.tests.unit" "${@:2}"
+sudo -u pulp -E PULP_DATABASES__default__USER=postgres pytest -r sx --color=yes --pyargs "${PROJECT}.tests.unit" "${@:2}"

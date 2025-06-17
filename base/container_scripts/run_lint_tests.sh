@@ -2,12 +2,10 @@
 
 declare PACKAGE="$1"
 
-if [ $PACKAGE == "pulp_file" ]
+if [[ $PACKAGE == "pulp_file" || ${PACKAGE} == "pulp_certguard" ]]
 then
     declare PACKAGE="pulpcore"
 fi
-
-declare PROJECT="${PACKAGE//-/_}"
 
 set -e
 
@@ -19,7 +17,7 @@ black --check --diff .
 
 if [[ -f flake8.cfg ]];
 then
-    flake8 --config flake8.cfg "$PROJECT"
+    flake8 --config flake8.cfg "${PACKAGE}"
 else
     flake8
 fi
