@@ -101,6 +101,7 @@ def test(args, client):
 
 def generate_client(args, client):
     api_root = client.get_dynaconf_variable("API_ROOT")
+    container_name = client.container_name(service="pulp")
 
     base_cmd = [
         "bash",
@@ -115,7 +116,7 @@ def generate_client(args, client):
     env = {**os.environ, **client.config, "PULP_API_ROOT": api_root}
 
     for plugin in plugins:
-        cmd = base_cmd + [plugin.replace("-", "_"), args.language]
+        cmd = base_cmd + [plugin.replace("-", "_"), args.language, container_name]
         if args.is_verbose:
             print(f"Running local command: {' '.join(cmd)}")
 
