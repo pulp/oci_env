@@ -34,6 +34,12 @@ services:
       - "{API_PORT}:{NGINX_PORT}"
     depends_on:
       - _base
+    healthcheck:
+      test: pulp status || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_interval: 30s
     volumes:
       - "{SRC_DIR}:/src:z"
       - "{OCI_ENV_DIR}:/opt/oci_env:z"
