@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   pminio:
     image: quay.io/minio/minio
