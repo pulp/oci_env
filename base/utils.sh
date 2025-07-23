@@ -49,6 +49,8 @@ set_nginx_port() {
       /usr/bin/sed -i s/listen\ 443/listen\ "${NGINX_SSL_PORT}"/g /nginx/ssl_nginx.conf
     fi
     if [[ -f /nginx/nginx.conf.j2 ]]; then
+      /usr/bin/sed -i s/\}\}80/\}\}"${NGINX_PORT}"/g /nginx/nginx.conf.j2
+      /usr/bin/sed -i s/\}\}443/\}\}"${NGINX_SSL_PORT}"/g /nginx/nginx.conf.j2
       /usr/bin/sed -i s/listen\ 80/listen\ "${NGINX_PORT}"/g /nginx/nginx.conf.j2
       /usr/bin/sed -i s/listen\ 443/listen\ "${NGINX_SSL_PORT}"/g /nginx/nginx.conf.j2
     fi
