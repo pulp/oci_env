@@ -1,18 +1,22 @@
-version: "3.7"
-
 services:
   pminio:
-    image: minio/minio
+    image: quay.io/minio/minio
     environment:
-      - "MINIO_ACCESS_KEY={S3_ACCESS_KEY}"
-      - "MINIO_SECRET_KEY={S3_SECRET_KEY}"
+      - "MINIO_ROOT_USER={S3_ACCESS_KEY}"
+      - "MINIO_ROOT_PASSWORD={S3_SECRET_KEY}"
     ports:
       - "{MINIO_PORT}:9000"
       - "{MINIO_CONSOLE_PORT}:9091"
     volumes:
       - "oci_pminio:/data"
     depends_on:
-      - pulp
+      - _base
+    healthcheck:
+      test: curl -I http://pminio:9000/minio/health/live || exit 1
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_interval: 5s
     command: "server /data --console-address ':9091'"
 
 volumes:

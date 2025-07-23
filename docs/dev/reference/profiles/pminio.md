@@ -7,8 +7,9 @@ instance is launched as a separate service and can be accessed inside the main c
 `http://pminio:9000`. The Minio Client CLI,`mc`, is also installed and configured inside the main 
 container to talk to the Minio service.
 
-Do not forget to add a new entry to `/etc/hosts` on the host machine for the `pminio` alias, like
-so:
+If you want to interact with Pulp distributions from your host,
+add a new entry to `/etc/hosts` on the host machine for the `pminio` alias, like so:
+
 ```
 127.0.0.1   localhost localhost4 pminio
 ::1         localhost localhost6 pminio
