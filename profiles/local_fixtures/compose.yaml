@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   local_fixtures:
     image: pulp/pulp-fixtures
