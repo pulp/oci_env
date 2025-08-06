@@ -7,7 +7,7 @@ ENV S6_KEEP_ENV=1
 COPY dev_requirements.txt /dev_requirements.txt
 
 COPY switch_python /usr/bin/switch_python
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.11
 RUN switch_python "$PYTHON_VERSION"
 
 RUN pip3 install -r dev_requirements.txt
