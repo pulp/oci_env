@@ -3,8 +3,8 @@
 set -e
 
 NEWV=$1
-if [[ "$NEWV" == "3.9" ]]; then
-    echo "using default python 3.9"
+if [[ "$NEWV" == "3.11" ]]; then
+    echo "using default python 3.11"
     exit 0
 fi
 
