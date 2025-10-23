@@ -3,8 +3,9 @@
 set -e
 
 NEWV=$1
-if [[ "$NEWV" == "3.11" ]]; then
-    echo "using default python 3.11"
+CURV=$(python3 --version)
+if [[ "${CURV//Python /}" == *"$NEWV"* ]]; then
+    echo "using default python $CURV"
     exit 0
 fi
 
