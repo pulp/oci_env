@@ -9,29 +9,46 @@ receivers:
             - https://*
 
 processors:
-  batch:
+
   memory_limiter:
-    check_interval: 1s
-    limit_mib: 4000
-  transform:
-    error_mode: ignore
-    metric_statements:
-      - context: metric
-        statements:
-         - set(description, "Duration of HTTP server requests.") where name == "http.server.duration"
-         - set(description, "Number of active HTTP server requests.") where name == "http.server.active_requests"
+    check_interval: 2s
+    limit_mib: 200
+
+  filter/filter_pulp_api_request_duration:
+    metrics:
+      metric:
+      - 'not (name == "api.request_duration")'
+
+  filter/exclude_pulp_api:
+    metrics:
+      metric:
+      - 'name == "api.request_duration"'
+
+  batch/api_aggregation:
+    timeout: 10s
+
+  attributes/remove_worker_name:
+    actions:
+    - key: worker.name
+      action: delete
+
+  groupbyattrs/api_aggregation:
+    keys:
+    - api.request_duration
+
+  batch:
 
 exporters:
   prometheus:
     endpoint: 0.0.0.0:8889
     # send_timestamps: true
     namespace: pulp
-  logging:
-    verbosity: detailed
   otlp/jaeger:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  debug:
+    verbosity: detailed
 
 extensions:
   health_check:
@@ -46,11 +63,21 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, batch]
       exporters: [otlp/jaeger]
-    metrics:
+
+    metrics/aggregation:
       receivers: [otlp]
-      processors: [transform, batch, memory_limiter]
-      exporters: [logging, prometheus]
-    logs:
+      processors:
+        - memory_limiter
+        - filter/filter_pulp_api_request_duration
+        - attributes/remove_worker_name
+        - batch/api_aggregation
+        - groupbyattrs/api_aggregation
+      exporters: [prometheus]
+
+    metrics/main:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [logging]
+      processors:
+        - memory_limiter
+        - filter/exclude_pulp_api
+        - batch
+      exporters: [prometheus]
