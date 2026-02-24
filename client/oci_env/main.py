@@ -11,7 +11,6 @@ from oci_env.commands import (
     pulpcore_manager,
     profile,
     poll,
-    pulp,
     phelper
 )
 
@@ -55,7 +54,6 @@ def get_parser():
     parse_pulpcore_manager_command(subparsers)
     parse_profile_command(subparsers)
     parse_poll_command(subparsers)
-    parse_pulp_cli_command(subparsers)
     parse_phelper_commands(subparsers)
 
     return parser
@@ -148,12 +146,6 @@ def parse_poll_command(subparsers):
     parser.add_argument('--attempts', type=int, dest='attempts', default=10, help="Number of attempts to make.")
     parser.add_argument('--wait', type=int, dest='wait', default=10, help="Time in seconds to wait between attempts.")
     parser.set_defaults(func=poll)
-
-
-def parse_pulp_cli_command(subparsers):
-    parser = subparsers.add_parser('pulp', help='Run pulp cli.')
-    parser.add_argument('command', nargs=argparse.REMAINDER, help='Command to pass to pulp cli.')
-    parser.set_defaults(func=pulp)
 
 
 def parse_phelper_commands(subparsers):
