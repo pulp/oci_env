@@ -199,10 +199,6 @@ def poll(args, client):
     client.poll(args.attempts, args.wait)
 
 
-def pulp(args, client):
-    exit(client.exec(["pulp"] + args.command, interactive=False).returncode)
-
-
 def phelper(args, client):
     if args.action in ("help", "status", "dbreset", "clean"):
         proc = client.exec(["bash", "-lc", f"p{args.action}"], shell=True)

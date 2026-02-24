@@ -77,6 +77,11 @@ jobs:
         run: |
           cp -r oci_env/.github/assets/profiles/* oci_env/profiles/
 
+      - name: install pulp-cli
+        run: |
+          pip install pulp-cli
+          pulp config create --base-url http://localhost:5001 --api-root /my/custom/api/ --username admin --password password
+
       - name: install oci-env cli
         run: |
           pip install -e oci_env/client/
@@ -93,25 +98,25 @@ jobs:
           oci-env -e custom.env poll --wait 5 --attempts 5
 
       - name: Create some dummy data with the pulp CLI (retry up to 5 times because it's sometimes not actually ready)
-        run: for i in $(seq 1 5); do oci-env pulp file repository create --name test1 && s=0 && break || s=$? && sleep 5; done; (exit $s)
+        run: for i in $(seq 1 5); do pulp --refresh-api file repository create --name test1 && s=0 && break || s=$? && sleep 5; done; (exit $s)
       
       - name: Snapshot the DB
         run: oci-env db snapshot
 
       - name: Create some dummy data with the pulp CLI
-        run: oci-env -v pulp file repository create --name test2
+        run: pulp file repository create --name test2
 
       - name: Test DB restore. Test that test1 exists and test2 doesn't
         run: | 
           oci-env db restore
-          oci-env pulp file repository show --name test1
-          if oci-env pulp file repository show --name test2; then false; fi
+          pulp file repository show --name test1
+          if pulp file repository show --name test2; then false; fi
 
       - name: Test DB Reset. Test that test1 and test2 are gone
         run: |
           oci-env db reset
-          if oci-env pulp file repository show --name test1; then false; fi
-          if oci-env pulp file repository show --name test2; then false; fi
+          if pulp file repository show --name test1; then false; fi
+          if pulp file repository show --name test2; then false; fi
 
       - name: Test that the correct plugins are installed and that the API_ROOT was successfully changed.
         run: |
