@@ -1,6 +1,7 @@
 import os
 import pathlib
 import subprocess
+import sys
 import time
 
 from urllib import request
@@ -8,12 +9,13 @@ from urllib import request
 from oci_env.logger import logger
 
 
-def get_oci_env_path():
+def get_oci_env_path(is_verbose=False):
     """This returns the root directory of the oci-env checkout."""
 
     if OCI_ENV_PATH := os.environ.get("OCI_ENV_PATH"):
         OCI_ENV_PATH = OCI_ENV_PATH.rstrip('/')
-        logger.info(f'USING OCI_ENV_PATH FROM ENV: {OCI_ENV_PATH}')
+        if is_verbose:
+            logger.info(f'USING OCI_ENV_PATH FROM ENV: {OCI_ENV_PATH}')
         return OCI_ENV_PATH
 
     # this is the $CHECKOUT/client/oci_env/utils.py path ...
@@ -33,7 +35,8 @@ def get_oci_env_path():
         return cwd
 
     gitroot = pid.stdout.decode('utf-8').strip().rstrip('/')
-    logger.info(f'USING {gitroot} FOR OCI_ENV_PATH BASED ON GIT CMD OUTPUT')
+    if is_verbose:
+        logger.info(f'USING {gitroot} FOR OCI_ENV_PATH BASED ON GIT CMD OUTPUT')
     return gitroot
 
 
@@ -328,7 +331,7 @@ class Compose:
     and executing scripts inside running containers.
     """
     def __init__(self, is_verbose, env_file):
-        self.path = get_oci_env_path()
+        self.path = get_oci_env_path(is_verbose)
         self.config = get_config(get_env_file(self.path, env_file))
         self.compose_files = parse_profiles(self.config)
         self.is_verbose = is_verbose
@@ -339,12 +342,16 @@ class Compose:
 
     def compose_command(self, cmd, interactive=False, pipe_output=False):
         """
-        Run a docker-compose or podman-compose command.
+        Run a docker compose or podman-compose command.
 
         This sets the correct project name and loads up all the compose files, but
         takes in the rest of the arguments (exec, up, down, etc) from the user.
         """
-        binary = [self.config["COMPOSE_BINARY"] + "-compose", "-p", self.config["COMPOSE_PROJECT_NAME"]]
+        binary = [self.config["COMPOSE_BINARY"], "-p", self.config["COMPOSE_PROJECT_NAME"]]
+        if self.config["COMPOSE_BINARY"] == "podman":
+            binary[0] += "-compose"
+        elif self.config["COMPOSE_BINARY"] == "docker":
+            binary.insert(1, "compose")
 
         compose_files = []
 
@@ -425,7 +432,7 @@ class Compose:
 
         # docker fails on systems with no interactive CLI. This tells docker
         # to use a pseudo terminal when no CLI is available.
-        if os.getenv("COMPOSE_INTERACTIVE_NO_CLI", "0") == "1":
+        if os.getenv("COMPOSE_INTERACTIVE_NO_CLI", "0") == "1" or not sys.stdin.isatty():
             cmd = [binary, "exec", self.container_name(service)] + args
         else:
             cmd = [binary, "exec", "-it", self.container_name(service)] + args

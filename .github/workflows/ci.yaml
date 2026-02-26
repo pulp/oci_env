@@ -22,8 +22,8 @@ jobs:
         include:
           - os: ubuntu-latest
             TEST: docker
-          # - os: ubuntu-latest
-          #   TEST: podman
+          - os: ubuntu-latest
+            TEST: podman
           # - os: macos-12
           #   TEST: docker
     runs-on: ${{ matrix.os }}
@@ -54,6 +54,7 @@ jobs:
           sudo apt install -y httpie podman
           sudo pip install podman-compose
           podman --version
+          podman-compose --version
 
       - name: (Mac) Install docker compose
         if: matrix.TEST == 'docker' && matrix.os == 'macos-12'
@@ -62,8 +63,8 @@ jobs:
       - name: (Linux) Install docker compose 
         if: matrix.TEST == 'docker' && matrix.os == 'ubuntu-latest'
         run: |
-          curl -L -o /tmp/docker-compose https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64
-          install /tmp/docker-compose /usr/local/bin/
+          # Use github runner's docker compose
+          docker compose version
 
       - name: setup .compose.env files
         run: |
