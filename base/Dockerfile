@@ -10,7 +10,7 @@ COPY switch_python /usr/bin/switch_python
 ARG PYTHON_VERSION=3.11
 RUN switch_python "$PYTHON_VERSION"
 
-RUN pip3 install -r dev_requirements.txt
+RUN uv pip install -r dev_requirements.txt
 
 RUN dnf -y install gettext
 

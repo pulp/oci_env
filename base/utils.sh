@@ -21,7 +21,7 @@ install_local_deps() {
         if [[ -d "$src_path" ]]; then
             log_message "Installing path ${item} in editable mode."
 
-            pip3 install --prefix /usr/local/ --no-cache-dir --editable "$src_path" >/dev/null
+            uv pip install --prefix /usr/local/ --no-cache-dir --editable "$src_path" >/dev/null
 
             nginx_config="${src_path}/${item}/app/webserver_snippets/nginx.conf"
 

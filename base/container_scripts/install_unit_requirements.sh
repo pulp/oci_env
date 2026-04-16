@@ -18,5 +18,5 @@ fi
 cd "/src/${PROJECT}/"
 
 if [[ -f unittest_requirements.txt ]]; then
-    pip install -r unittest_requirements.txt
+    uv pip install -r unittest_requirements.txt
 fi

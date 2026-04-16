@@ -18,5 +18,5 @@ fi
 cd "/src/${PROJECT}/"
 
 if [[ -f functest_requirements.txt ]]; then
-    pip3 install -r functest_requirements.txt
+    uv pip install -r functest_requirements.txt
 fi
