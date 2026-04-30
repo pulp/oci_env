@@ -1,0 +1,25 @@
+# Add any custom services for your profile here.
+---
+version: "3.7"
+
+services:
+  saml2idp:
+    image: "ghcr.io/pfrest/mock-saml2-idp:latest"
+    ports:
+      - "8443:8443"
+    environment:
+      IDP_AUTH_MODE: "auto"
+      SP_ENTITY_ID: "https://pulp/saml2/metadata/"
+      SP_ACS_LOCATION: "https://pulp/saml2/acs/"
+      IDP_USER_GROUPS: "file_admin"
+  browser:
+    build:
+      dockerfile: "../../profiles/saml2/browser.Containerfile"
+      context: "../../profiles/saml2/"
+    devices:
+      - "/dev/dri/"
+    volumes:
+      - "/tmp/.X11-unix/:/tmp/.X11-unix/:ro"
+    environment:
+      DISPLAY: ":0.0"
+...
