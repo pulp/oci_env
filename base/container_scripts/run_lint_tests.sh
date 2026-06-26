@@ -13,13 +13,7 @@ export XDG_CONFIG_HOME=/opt/scripts/
 
 cd "/src/$PACKAGE/"
 
-black --check --diff .
-
-if [[ -f flake8.cfg ]];
-then
-    flake8 --config flake8.cfg "${PACKAGE}"
-else
-    flake8
-fi
+ruff format --check --diff
+ruff check
 
 [ ! -x .ci/scripts/extra_linting.sh ] || .ci/scripts/extra_linting.sh
