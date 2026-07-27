@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/pulp/pulp-ci-centos9:latest
+ARG BASE_IMAGE=ghcr.io/pulp/pulp-ci-centos10:latest
 FROM $BASE_IMAGE
 
 # configure S6 to use env variables
@@ -7,7 +7,7 @@ ENV S6_KEEP_ENV=1
 COPY dev_requirements.txt /dev_requirements.txt
 
 COPY switch_python /usr/bin/switch_python
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.12
 RUN switch_python "$PYTHON_VERSION"
 
 RUN uv pip install -r dev_requirements.txt
