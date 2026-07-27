@@ -21,6 +21,9 @@ DEV_SOURCE_PATH=pulpcore
 API_PORT=4002
 COMPOSE_PROJECT_NAME=test
 
+# Django SECRET_KEY value, used for session auth - uncomment this and change the value to something else
+PULP_SECRET_KEY="your_secret_value_here"
+
 # If you want to use a different directory for your git checkouts you can set this
 # SRC_DIR=/path/to/my/git/checkouts
 ```
