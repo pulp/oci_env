@@ -3,20 +3,14 @@
 ## Lint
 
 ```bash
-# Install the lint requirements and run the linter for a specific plugin
-oci-env test -i -p PLUGIN_NAME lint
-
-# Run the linter without installing lint dependencies.
+# Install lint requirements and run the linter for a specific plugin
 oci-env test -p PLUGIN_NAME lint
 ```
 
 ## Unit
 
 ```bash
-# Install the unit test dependencies for a plugin and run it.
-oci-env test -i -p PLUGIN_NAME unit
-
-# Run the unit tests for a plugin without installing test dependencies.
+# Install unit test dependencies and run them for a plugin.
 oci-env test -p PLUGIN_NAME unit
 ```
 
@@ -32,13 +26,10 @@ Before functional tests can be run, you must clone `github.com/pulp/pulp-openapi
 ```
 
 ```bash
-# Generate the pulp client. This will build clients for all plugins in DEV_SOURCE_PATH. -i will also install the client in the container.
-oci-env generate-client -i
+# Generate and install clients for all plugins in DEV_SOURCE_PATH.
+oci-env generate-client
 
-# Install the functional test requirements and run the tests
-oci-env test -i -p PLUGIN_NAME functional
-
-# Run the tests without installing dependencies.
+# Install functional test requirements and run the tests
 oci-env test -p PLUGIN_NAME functional
 ```
 
@@ -53,7 +44,7 @@ e.g. `oci-env generate-client -l ruby PLUGIN_NAME`.
 
 1. Add "epdb" to the `functest_requirements.txt` file in your pulp_ansible checkout path.
 2. Inside any functional test, add `import epdb; epdb.st()`.
-3. Re-run `oci-env test -i functional` and `oci-env test -p pulp_ansible functional --capture=no` commands again.
+3. Re-run `oci-env test -p pulp_ansible functional --capture=no`.
 
 ### Using PyCharm
 
