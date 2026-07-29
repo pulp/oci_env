@@ -101,9 +101,9 @@ def parse_shell_command(subparsers):
 def parse_test_command(subparsers):
     parser = subparsers.add_parser('test', help='Run tests and install requirements.')
     parser.add_argument('test', choices=["functional", "unit", "lint", "performance"])
-    parser.add_argument('-i', action='store_true', dest='install_deps', help="Install the python dependencies for the selected test instead of running it. If -p is not specified this will install all the test dependencies for each plugin in DEV_SOURCE_PATH.")
+    parser.add_argument('-i', action='store_true', dest='install_deps', help="Deprecated no-op. Test dependencies are always installed.")
     parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test. Tests won't run unless this is specified.")
-    parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to pytest.')
+    parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to pytest. Use -k/-m to select tests (file paths are not supported with --pyargs).')
     parser.add_argument("--privileged", action="store_true", dest="privileged")
     parser.set_defaults(func=test)
 
@@ -112,7 +112,7 @@ def parse_generate_client_command(subparsers):
     parser = subparsers.add_parser('generate-client', help='Generate the the pulp client.')
     parser.add_argument('plugin', nargs="?", default=None, help="Plugin to generate a client for. If no plugin is specified clients will be generated for all plugins in DEV_SOURCE_PATH.")
     parser.add_argument('-l', '--language', default="python", choices=['python', 'ruby'], help="Language to generate a client for. If no language is specified clients will be generated for python.")
-    parser.add_argument('-i', action='store_true', dest='install_client', help="Install the client after generating it.")
+    parser.add_argument('-i', action='store_true', dest='install_client', help="Deprecated no-op. Python clients are always installed after generating.")
 
     parser.set_defaults(func=generate_client)
 

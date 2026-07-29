@@ -17,10 +17,9 @@ function check_pytest () {
 
 ERROR: pytest is not installed
 
-This usually means you did not include the "-i" flag with the oci-env "test"
-subcommand. The first invocation of functional tests needs "-i" to install the
-test requirements (inc. pytest). After the requirements are installed, "-i" can
-be dropped from further runs on the same container instance.
+This usually means the performance test requirements failed to install. Check that
+perftest_requirements.txt or functest_requirements.txt exists for the plugin and
+that "oci-env test -p PLUGIN performance" completed the install step successfully.
 EOF
         exit 1
     }
@@ -32,10 +31,8 @@ function check_client () {
 
 ERROR: pulpcore.client.${PROJECT} is missing.
 
-This usually means you did not run "oci-env generate-client -i ${PROJECT}" before
-running the functional test command. It could also mean you did not pass the "-i"
-flag to the "generate-client" subcommand which would have created the client, but
-not install it into the appropriate location.
+This usually means you did not run "oci-env generate-client ${PROJECT}" before
+running the performance test command.
 EOF
         exit 1
     }
