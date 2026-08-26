@@ -23,11 +23,15 @@ Each agent owns a single directory under `.compiled/`:
 .compiled/agent_<id>/
   compose.env                      # agent env file
   plugin_volumes_compose.yaml      # bind mounts for plugin checkouts
+  pulp-openapi-generator/          # copy of the host generator checkout
   …                                # compose files written here on `up` (parse_profiles)
 ```
 
 `SRC_DIR` for the agent is that directory. Plugin checkouts are always bind-mounted into
 `/src/<plugin>` via the volume overlay (never by sharing the host `SRC_DIR` directly).
+If `pulp-openapi-generator` exists under the host source directory, `create` copies it
+into the agent `SRC_DIR` so each agent generates clients in isolation. That copy appears
+at `/src/pulp-openapi-generator` through the base `{SRC_DIR}:/src` mount.
 
 ## Prerequisites
 
@@ -48,10 +52,12 @@ Each agent owns a single directory under `.compiled/`:
    ~/devel/
    ├── oci_env
    ├── pulpcore   # includes pulp_file
-   └── pulp_rpm
+   ├── pulp_rpm
+   └── pulp-openapi-generator
    ```
 
    `pulp_file` ships inside the `pulpcore` checkout — do not list it in `--plugins`.
+   `pulp-openapi-generator` is required for `oci-env agent generate-client`.
 
 ## Typical agent loop
 
@@ -111,10 +117,15 @@ oci-env agent create pr-123 \
 ```
 
 `create` always writes a compose volume overlay that bind-mounts each real checkout at
-`/src/<plugin>` (nested under the base `{SRC_DIR}:/src` mount).
+`/src/<plugin>` (nested under the base `{SRC_DIR}:/src` mount). `pulp-openapi-generator`
+is copied into the agent `SRC_DIR` when present under `--host-src-dir`; if it is missing,
+`create` warns and `generate-client` will fail until you clone it and recreate the agent.
 
-Destroy removes the entire `.compiled/agent_<id>/` directory; it never deletes the plugin
-checkouts that were bind-mounted.
+`oci-env agent generate-client` runs the generator against that per-agent copy and
+installs the resulting packages from `/src/pulp-openapi-generator` inside the container.
+
+Destroy removes the entire `.compiled/agent_<id>/` directory, including the generator
+copy. It never deletes the plugin checkouts that were bind-mounted.
 
 ## Parallelism tips
 
