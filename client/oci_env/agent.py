@@ -385,41 +385,45 @@ def agent_create(args):
     project_name = agent_project_name(args.agent_id)
     compose_profile = env_overrides.get("COMPOSE_PROFILE") or "lean"
 
-    os.makedirs(compiled_dir, exist_ok=True)
-    overlay = write_plugin_volume_overlay(
-        agent_volume_overlay_path(oci_env_path, args.agent_id),
-        plugin_paths,
-    )
-    generator = copy_generator_checkout(host_src_dir, compiled_dir)
-    if not generator:
-        logger.warning(
-            f"No {GENERATOR_REPO} checkout at "
-            f"{os.path.join(host_src_dir, GENERATOR_REPO)}. "
-            "oci-env agent generate-client will fail until you clone it and "
-            "destroy/recreate this agent."
+    compiled_root = os.path.dirname(compiled_dir)
+    temp_dir = tempfile.mkdtemp(prefix=f".{project_name}.", dir=compiled_root)
+    os.chmod(temp_dir, 0o755)
+    try:
+        overlay = write_plugin_volume_overlay(
+            os.path.join(temp_dir, AGENT_OVERLAY_FILENAME), plugin_paths
         )
+        generator = copy_generator_checkout(host_src_dir, temp_dir)
+        if not generator:
+            logger.warning(
+                f"No {GENERATOR_REPO} checkout at "
+                f"{os.path.join(host_src_dir, GENERATOR_REPO)}. "
+                "oci-env agent generate-client will fail until you clone it and "
+                "destroy/recreate this agent."
+            )
 
-    values = {
-        "OCI_AGENT_ID": args.agent_id,
-        "COMPOSE_PROFILE": compose_profile,
-        "DEV_SOURCE_PATH": ":".join(plugins),
-        "COMPOSE_PROJECT_NAME": project_name,
-        "API_PORT": str(api_port),
-        "SRC_DIR": compiled_dir,
-        "COMPOSE_BINARY": AGENT_COMPOSE_BINARY,
-        "API_HOST": "localhost",
-        "API_PROTOCOL": "http",
-        # Pulp refuses to start without this; --env can override.
-        "PULP_SECRET_KEY": "dummy",
-        "OCI_AGENT_HOST_SRC_DIR": host_src_dir,
-        "OCI_AGENT_PLUGIN_PATHS": encode_plugin_paths(plugin_paths),
-        "OCI_AGENT_VOLUME_OVERLAY": overlay,
-    }
-
-    # Apply user --env overrides (locked keys already rejected).
-    values.update(env_overrides)
-
-    write_env_file(env_path, values)
+        values = {
+            "OCI_AGENT_ID": args.agent_id,
+            "COMPOSE_PROFILE": compose_profile,
+            "DEV_SOURCE_PATH": ":".join(plugins),
+            "COMPOSE_PROJECT_NAME": project_name,
+            "API_PORT": str(api_port),
+            "SRC_DIR": compiled_dir,
+            "COMPOSE_BINARY": AGENT_COMPOSE_BINARY,
+            "API_HOST": "localhost",
+            "API_PROTOCOL": "http",
+            "PULP_SECRET_KEY": "dummy",
+            "OCI_AGENT_HOST_SRC_DIR": host_src_dir,
+            "OCI_AGENT_PLUGIN_PATHS": encode_plugin_paths(plugin_paths),
+            "OCI_AGENT_VOLUME_OVERLAY": agent_volume_overlay_path(
+                oci_env_path, args.agent_id
+            ),
+        }
+        values.update(env_overrides)
+        write_env_file(os.path.join(temp_dir, AGENT_ENV_FILENAME), values)
+        os.replace(temp_dir, compiled_dir)
+    except BaseException:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise
     print(f"Created agent {args.agent_id}")
     print(f"  env:     {env_path}")
     print(f"  project: {project_name}")
@@ -590,6 +594,7 @@ def agent_generate_client(args):
         )
 
     client = compose_for_agent(args.is_verbose, env_path)
+    client.poll(args.attempts, args.wait)
 
     from oci_env.commands import generate_client
 
@@ -602,6 +607,17 @@ def agent_generate_client(args):
     gargs.install_client = args.install_client
     gargs.is_verbose = args.is_verbose
     gargs.api_version = getattr(args, "api_version", "v3")
+
+    requested_plugins = (
+        [args.plugin]
+        if args.plugin
+        else [p for p in env_data.get("DEV_SOURCE_PATH", "").split(":") if p]
+    )
+    if args.language == "python" and "pulpcore" not in requested_plugins:
+        gargs.plugin = "pulpcore"
+        generate_client(gargs, client)
+
+    gargs.plugin = args.plugin
     generate_client(gargs, client)
 
 
