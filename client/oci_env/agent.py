@@ -281,7 +281,7 @@ def agent_generator_dir(src_dir):
 
 def agent_has_generator_copy(src_dir):
     """True if create copied pulp-openapi-generator into the agent SRC_DIR."""
-    return os.path.isfile(os.path.join(agent_generator_dir(src_dir), "generate.sh"))
+    return os.path.isfile(os.path.join(agent_generator_dir(src_dir), "gen-client.sh"))
 
 
 def copy_generator_checkout(host_src_dir, compiled_dir):
