@@ -10,7 +10,7 @@ echo "generate_client ${API_VERSION}"
 
 if [ ! -d "${SRC_DIR}/pulp-openapi-generator/" ]
 then
-    echo "Please clone github.com/pulp/pulp-openapi-generator into ${pwd}/pulp-openapi-generator/"
+    echo "Please clone github.com/pulp/pulp-openapi-generator into ${SRC_DIR}/pulp-openapi-generator/"
     exit 1
 fi
 

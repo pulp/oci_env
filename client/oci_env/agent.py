@@ -21,6 +21,7 @@ DEFAULT_PORT_START = 5100
 DEFAULT_PORT_END = 5199
 AGENT_ENV_FILENAME = "compose.env"
 AGENT_OVERLAY_FILENAME = "plugin_volumes_compose.yaml"
+GENERATOR_REPO = "pulp-openapi-generator"
 
 # Agent environments always use podman (rootless-friendly for parallel stacks).
 AGENT_COMPOSE_BINARY = "podman"
@@ -264,6 +265,53 @@ def encode_plugin_paths(plugin_paths):
     return ",".join(f"{plugin}={path}" for plugin, path in sorted(plugin_paths.items()))
 
 
+def generator_checkout_path(host_src_dir):
+    """Return the real path to pulp-openapi-generator under host_src_dir, or None."""
+    if not host_src_dir:
+        return None
+    path = os.path.join(host_src_dir, GENERATOR_REPO)
+    if os.path.isdir(path):
+        return os.path.realpath(path)
+    return None
+
+
+def agent_generator_dir(src_dir):
+    return os.path.join(src_dir, GENERATOR_REPO)
+
+
+def agent_has_generator_copy(src_dir):
+    """True if create copied pulp-openapi-generator into the agent SRC_DIR."""
+    return os.path.isfile(os.path.join(agent_generator_dir(src_dir), "generate.sh"))
+
+
+def copy_generator_checkout(host_src_dir, compiled_dir):
+    """
+    Copy pulp-openapi-generator into the agent compiled dir.
+
+    Skips .git and previously generated *-client trees so each agent gets an
+    isolated working copy without sharing host generator state.
+    """
+    src = generator_checkout_path(host_src_dir)
+    if not src:
+        return None
+    dest = agent_generator_dir(compiled_dir)
+    ignore = shutil.ignore_patterns(
+        ".git",
+        ".github",
+        "*-client",
+        "__pycache__",
+        ".pytest_cache",
+        "api.json",
+        "patched-api.json",
+    )
+    try:
+        shutil.copytree(src, dest, ignore=ignore)
+    except OSError as exc:
+        exit_with_error(f"Failed to copy {GENERATOR_REPO} from {src} to {dest}: {exc}")
+    logger.info(f"Copied {GENERATOR_REPO} to {dest}")
+    return dest
+
+
 def write_plugin_volume_overlay(overlay_path, plugin_paths):
     """
     Write a compose overlay that bind-mounts plugin checkouts into /src/<plugin>.
@@ -342,6 +390,14 @@ def agent_create(args):
         agent_volume_overlay_path(oci_env_path, args.agent_id),
         plugin_paths,
     )
+    generator = copy_generator_checkout(host_src_dir, compiled_dir)
+    if not generator:
+        logger.warning(
+            f"No {GENERATOR_REPO} checkout at "
+            f"{os.path.join(host_src_dir, GENERATOR_REPO)}. "
+            "oci-env agent generate-client will fail until you clone it and "
+            "destroy/recreate this agent."
+        )
 
     values = {
         "OCI_AGENT_ID": args.agent_id,
@@ -374,6 +430,8 @@ def agent_create(args):
     print(f"  plugins: {':'.join(plugins)}")
     for plugin in plugins:
         print(f"  {plugin}: {plugin_paths[plugin]}")
+    if generator:
+        print(f"  {GENERATOR_REPO}: {generator}")
     for key in sorted(env_overrides.keys()):
         print(f"  {key}={env_overrides[key]}")
     print(f"Start with: oci-env agent up {args.agent_id}")
@@ -428,8 +486,8 @@ def agent_destroy(args):
     except SystemExit:
         logger.warning("compose client setup failed; continuing with agent cleanup")
 
-    # Remove the entire agent compiled directory (env, overlay, and any files
-    # written by parse_profiles). Never deletes bind-mount targets.
+    # Remove the entire agent compiled directory (env, overlay, generator copy,
+    # and any files written by parse_profiles). Never deletes bind-mount targets.
     if os.path.isdir(compiled_dir):
         shutil.rmtree(compiled_dir)
         logger.info(f"Removed agent compiled directory {compiled_dir}")
@@ -522,7 +580,15 @@ def agent_test(args):
 
 def agent_generate_client(args):
     oci_env_path = get_oci_env_path(args.is_verbose)
-    env_path, _ = load_agent_env(oci_env_path, args.agent_id)
+    env_path, env_data = load_agent_env(oci_env_path, args.agent_id)
+    src_dir = env_data.get("SRC_DIR") or agent_compiled_dir(oci_env_path, args.agent_id)
+    if not agent_has_generator_copy(src_dir):
+        exit_with_error(
+            f"{GENERATOR_REPO} was not copied when agent {args.agent_id} was created. "
+            "Clone github.com/pulp/pulp-openapi-generator into the host source directory, "
+            "then destroy and recreate the agent."
+        )
+
     client = compose_for_agent(args.is_verbose, env_path)
 
     from oci_env.commands import generate_client
@@ -535,6 +601,7 @@ def agent_generate_client(args):
     gargs.language = args.language
     gargs.install_client = args.install_client
     gargs.is_verbose = args.is_verbose
+    gargs.api_version = getattr(args, "api_version", "v3")
     generate_client(gargs, client)
 
 
