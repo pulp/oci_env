@@ -5,6 +5,7 @@ import re
 import shutil
 import socket
 import subprocess
+import tempfile
 
 from oci_env.logger import logger
 from oci_env.utils import (
