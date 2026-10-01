@@ -8,7 +8,7 @@ coding agents running scoped functional tests).
 - Sets `PULP_WORKERS=1` so each environment runs a single task worker
 - Caps the `pulp` container with `mem_limit` and `cpus` so parallel stacks do not starve the host
 
-This profile does **not** add sidecars (UI, Kafka, OpenTelemetry, MinIO, etc.). Combine it with
+This profile does **not** add sidecars (UI, Kafka, OpenTelemetry, RustFS, etc.). Combine it with
 other profiles only when those services are required.
 
 ## Usage
