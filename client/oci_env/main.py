@@ -281,6 +281,8 @@ def parse_agent_command(subparsers):
         dest="api_version",
         help="API version to generate the clients for (default: v3).",
     )
+    gen.add_argument("--attempts", type=int, default=30, help="API readiness poll attempts.")
+    gen.add_argument("--wait", type=int, default=10, help="Seconds between readiness polls.")
     gen.set_defaults(func=agent_dispatch, agent_action="generate-client")
 
 
