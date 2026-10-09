@@ -1,0 +1,22 @@
+services:
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment:
+      - "RUSTFS_ACCESS_KEY={S3_ACCESS_KEY}"
+      - "RUSTFS_SECRET_KEY={S3_SECRET_KEY}"
+      - "RUSTFS_VOLUMES=/data"
+      - "RUSTFS_ADDRESS=0.0.0.0:9000"
+      - "RUSTFS_CONSOLE_ADDRESS=0.0.0.0:9001"
+      - "RUSTFS_CONSOLE_ENABLE=true"
+    volumes:
+      - "oci_s3_storage:/data"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_interval: 5s
+
+volumes:
+  oci_s3_storage:
+    name: "{COMPOSE_PROJECT_NAME}_s3_storage"

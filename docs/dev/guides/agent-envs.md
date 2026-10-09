@@ -151,6 +151,6 @@ multi-env flow with `-e` if you prefer hand-written files; see
 
 ## When not to use lean agents
 
-Interactive work that needs UI, Kafka, OpenTelemetry, MinIO, or other sidecars should keep using
+Interactive work that needs UI, Kafka, OpenTelemetry, RustFS, or other sidecars should keep using
 the normal profiles. Add those profiles with `--env COMPOSE_PROFILE=lean:…` only when required —
 they increase resource use and reduce how many agents fit on one machine.
