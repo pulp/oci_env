@@ -1,6 +1,8 @@
 services:
   pminio:
-    image: quay.io/minio/minio
+    # The old quay.io/minio/minio community image was retired. This public
+    # MinIO-compatible image keeps the local development profile working.
+    image: quay.io/openshifttest/minio:latest
     environment:
       - "MINIO_ROOT_USER={S3_ACCESS_KEY}"
       - "MINIO_ROOT_PASSWORD={S3_SECRET_KEY}"

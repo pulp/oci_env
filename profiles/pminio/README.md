@@ -2,10 +2,15 @@
 
 ## Usage
 
-Adding this profile sets up a Minio instance that is configured as Pulp's S3 backend. The Minio
+Adding this profile sets up a MinIO-compatible instance configured as Pulp's S3 backend. The
 instance is launched as a separate service and can be accessed inside the main container at
-`http://pminio:9000`. The Minio Client CLI,`mc`, is also installed and configured inside the main 
-container to talk to the Minio service.
+`http://pminio:9000`. The MinIO Client CLI, `mc`, is also installed and configured inside the
+main container to talk to the service.
+
+The profile uses `quay.io/openshifttest/minio:latest` because the former
+`quay.io/minio/minio` community image is no longer pullable. MinIO's current
+`quay.io/minio/aistor/minio` repository is AIStor and is not assumed to be a drop-in replacement
+for this local profile.
 
 Do not forget to add a new entry to `/etc/hosts` on the host machine for the `pminio` alias, like
 so:
