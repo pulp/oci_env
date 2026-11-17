@@ -106,7 +106,7 @@ def parse_test_command(subparsers):
     parser = subparsers.add_parser('test', help='Run tests and install requirements.')
     parser.add_argument('test', choices=["functional", "unit", "lint", "performance"])
     parser.add_argument('-i', action='store_true', dest='install_deps', help="Deprecated no-op. Test dependencies are always installed.")
-    parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test; place before the suite. Defaults to the sole source plugin in an agent environment.")
+    parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test; place before the suite. Without -p, only test requirements are installed.")
     parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to pytest. Use -k/-m to select tests (file paths are not supported with --pyargs).')
     parser.add_argument("--privileged", action="store_true", dest="privileged")
     parser.set_defaults(func=test)

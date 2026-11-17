@@ -113,7 +113,7 @@ class AgentSelectionTests(unittest.TestCase):
         cases = [
             (
                 "pulpcore",
-                "unit -- -p no:cacheprovider",
+                "-p pulpcore unit -- -p no:cacheprovider",
                 ["pulpcore", "-p", "no:cacheprovider"],
             ),
             (
@@ -140,12 +140,24 @@ class AgentSelectionTests(unittest.TestCase):
                 self.assertEqual(run.call_args_list[1].args, ("run_unit_tests.sh",))
                 self.assertEqual(run.call_args_list[1].kwargs["args"], expected)
 
-    def test_multiple_plugins_require_selection_before_installing(self):
-        self.write_config(DEV_SOURCE_PATH="pulpcore:pulp_python")
-        with patch.object(Compose, "exec_container_script") as run:
-            with self.assertRaises(SystemExit):
+    def test_without_plugin_only_installs_requirements(self):
+        for plugins in ["pulpcore", "pulpcore:pulp_python"]:
+            self.write_config(DEV_SOURCE_PATH=plugins)
+            with (
+                self.subTest(plugins=plugins),
+                patch.object(
+                    Compose,
+                    "exec_container_script",
+                    return_value=subprocess.CompletedProcess([], 0),
+                ) as run,
+            ):
                 self.run_cli("-a review test functional")
-            run.assert_not_called()
+                self.assertEqual(run.call_count, len(plugins.split(":")))
+                for invocation, plugin in zip(run.call_args_list, plugins.split(":")):
+                    self.assertEqual(
+                        invocation.args, ("install_functional_requirements.sh",)
+                    )
+                    self.assertEqual(invocation.kwargs["args"], [plugin])
 
     def test_missing_generator_copy_fails_before_container_access(self):
         with patch.object(Compose, "exec") as execute:

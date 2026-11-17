@@ -67,16 +67,6 @@ def shell(args, client):
 
 
 def test(args, client):
-    agent_id = client.config.get("OCI_AGENT_ID")
-    if agent_id:
-        if not args.plugin:
-            plugins = [p for p in client.config["DEV_SOURCE_PATH"].split(":") if p]
-            if len(plugins) != 1:
-                exit_with_error("Specify -p PLUGIN before the test suite unless the agent has exactly one source plugin")
-            args.plugin = plugins[0]
-
-        print(f"Running {args.test} tests for {args.plugin} on agent {agent_id}")
-
     pytest_args = list(args.args or [])
     if pytest_args and pytest_args[0] == "--":
         pytest_args = pytest_args[1:]

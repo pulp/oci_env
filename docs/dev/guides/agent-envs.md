@@ -178,9 +178,9 @@ exercise the agent's live API, not a shared default on port 5001.
 
 Specify the suite explicitly (`functional`, `unit`, `lint`, or `performance`). Put `-p PLUGIN`
 and `--privileged`, when needed, before the suite. Everything after the suite is forwarded
-to pytest; a leading `--` separator is removed. If the agent has only one source plugin,
-`-p` can be omitted. With multiple source plugins, it is required before any dependencies
-are installed.
+to pytest; a leading `--` separator is removed. As with the default environment, omitting
+`-p` only installs test requirements for all plugins in `DEV_SOURCE_PATH`; it does not run
+tests.
 
 The functional test runner prints the API URL and auth user before invoking pytest.
 
