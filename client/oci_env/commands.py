@@ -1,15 +1,15 @@
-import subprocess
 import os
 import pathlib
+import subprocess
 
 from oci_env.logger import logger
-from oci_env.utils import exit_if_failed, exit_with_error
 from oci_env.templates import profile_templates
+from oci_env.utils import exit_if_failed, exit_with_error
 
 
 def compose(args, client):
     logger.info(f'COMPOSE {args}')
-    client.compose_command(args.command, interactive=True)
+    exit_if_failed(client.compose_command(args.command, interactive=True))
 
 
 def exec(args, client):
@@ -67,6 +67,10 @@ def shell(args, client):
 
 
 def test(args, client):
+    pytest_args = list(args.args or [])
+    if pytest_args and pytest_args[0] == "--":
+        pytest_args = pytest_args[1:]
+
     test_script = f"install_{args.test}_requirements.sh"
 
     if args.plugin:
@@ -91,7 +95,7 @@ def test(args, client):
         exit_if_failed(
             client.exec_container_script(
                 f"run_{args.test}_tests.sh",
-                args=[args.plugin] + args.args,
+                args=[args.plugin] + pytest_args,
                 interactive=True,
                 privileged=args.privileged,
             )
@@ -99,6 +103,16 @@ def test(args, client):
 
 
 def generate_client(args, client):
+    if agent_id := client.config.get("OCI_AGENT_ID"):
+        from oci_env.agent import agent_has_generator_copy
+
+        if not agent_has_generator_copy(client.config["SRC_DIR"]):
+            exit_with_error(
+                f"pulp-openapi-generator was not copied when agent {agent_id!r} was created. "
+                "Clone github.com/pulp/pulp-openapi-generator into the host source directory, "
+                "then destroy and recreate the agent."
+            )
+
     api_root = client.get_dynaconf_variable("API_ROOT")
     container_name = client.container_name(service="pulp")
 

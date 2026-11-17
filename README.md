@@ -14,14 +14,22 @@ and the `lean` profile (`oci-env profile docs lean`).
 
 ```bash
 oci-env agent create pr-123 --plugins pulpcore
-oci-env agent up pr-123
-oci-env agent test pr-123 -p pulpcore -- -k test_crud_repos
+oci-env -a pr-123 compose up -d
+oci-env -a pr-123 poll --attempts 30 --wait 10
+oci-env -a pr-123 generate-client pulpcore
+oci-env -a pr-123 generate-client pulp_file
+oci-env -a pr-123 test -p pulpcore functional -- -k test_crud_repos
 oci-env agent destroy pr-123
 
 # Or reuse a Cursor / other AI tool worktree for plugins under test:
 oci-env agent create pr-123 \
   --plugins pulpcore=~/.cursor/worktrees/pulpcore/my-wt
 ```
+
+Use `-a AGENT_ID` (or `--agent AGENT_ID`) before the command to select an agent for
+`compose`, `exec`, `shell`, `test`, `generate-client`, `poll`, or any other operational
+command. The selector loads the agent's environment and worktree mounts. `-a` and `-e`
+are mutually exclusive. The `agent` subcommands are `create`, `ls`, and `destroy`.
 
 ## Multiple environments
 

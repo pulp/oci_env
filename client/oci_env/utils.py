@@ -3,7 +3,6 @@ import pathlib
 import subprocess
 import sys
 import time
-
 from urllib import request
 
 from oci_env.logger import logger
@@ -124,9 +123,21 @@ def get_config(env_file):
     # override any defaults that the user set.
     cfg = {**config, **user_preferences, **constant_vals}
 
-    # allow env overrides except for constants
+    fixed_keys = set(constant_vals)
+    if user_preferences.get("OCI_AGENT_ID"):
+        # Selecting an agent must not inherit another stack's identity or mounts
+        # from the caller's shell. Change these in the agent env file instead.
+        fixed_keys.update({
+            "OCI_AGENT_ID", "COMPOSE_PROJECT_NAME", "COMPOSE_BINARY", "SRC_DIR",
+            "DEV_SOURCE_PATH", "OCI_AGENT_PLUGIN_PATHS", "OCI_AGENT_VOLUME_OVERLAY",
+            "OCI_AGENT_HOST_SRC_DIR", "API_HOST", "API_PORT", "API_PROTOCOL",
+            "NGINX_PORT", "NGINX_SSL_PORT", "API_CONTAINER", "DB_CONTAINER",
+            "CONTENT_APP_CONTAINER", "WORKER_CONTAINER",
+        })
+
+    # Allow env overrides except for constants and agent target settings.
     for key in sorted(list(cfg.keys())):
-        if key in os.environ and key not in constant_vals:
+        if key in os.environ and key not in fixed_keys:
             val = os.environ.get(key)
             cfg[key] = val
         else:
@@ -333,8 +344,24 @@ class Compose:
     def __init__(self, is_verbose, env_file):
         self.path = get_oci_env_path(is_verbose)
         self.config = get_config(get_env_file(self.path, env_file))
+        overlay = self.config.get("OCI_AGENT_VOLUME_OVERLAY")
+        agent_id = self.config.get("OCI_AGENT_ID")
+        if agent_id and not overlay:
+            exit_with_error(f"Agent {agent_id!r} has no plugin volume overlay configured")
+        if overlay and not os.path.isfile(overlay):
+            exit_with_error(f"Agent plugin volume overlay does not exist: {overlay}")
+
         self.compose_files = parse_profiles(self.config)
+        if overlay:
+            self.compose_files.append(overlay)
         self.is_verbose = is_verbose
+
+        if agent_id:
+            logger.info(
+                f"Using agent {agent_id} (project {self.config['COMPOSE_PROJECT_NAME']}, "
+                f"API {self.config['API_PROTOCOL']}://{self.config['API_HOST']}:"
+                f"{self.config['API_PORT']})"
+            )
 
         if self.is_verbose:
             for key in sorted(self.config.keys()):

@@ -15,7 +15,6 @@ from oci_env.utils import (
     read_env_file,
 )
 
-
 AGENT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 DEFAULT_PORT_START = 5100
 DEFAULT_PORT_END = 5199
@@ -83,10 +82,14 @@ def list_agent_ids(oci_env_path):
 
 
 def load_agent_env(oci_env_path, agent_id):
+    validate_agent_id(agent_id)
     path = agent_env_path(oci_env_path, agent_id)
     if not os.path.isfile(path):
         exit_with_error(f"Agent {agent_id!r} does not exist (missing {path})")
-    return path, read_env_file(path)
+    data = read_env_file(path)
+    if data.get("OCI_AGENT_ID") != agent_id:
+        exit_with_error(f"Agent id in {path} does not match {agent_id!r}")
+    return path, data
 
 
 def write_env_file(path, values):
@@ -336,16 +339,6 @@ def write_plugin_volume_overlay(overlay_path, plugin_paths):
     return overlay_path
 
 
-def compose_for_agent(is_verbose, env_file):
-    client = Compose(is_verbose, env_file)
-    overlay = client.config.get("OCI_AGENT_VOLUME_OVERLAY")
-    if overlay and os.path.isfile(overlay):
-        client.compose_files.append(overlay)
-        if is_verbose:
-            logger.info(f"Including agent volume overlay: {overlay}")
-    return client
-
-
 def agent_status(oci_env_path, agent_id, env_data, is_verbose=False):
     """Return a short status string for an agent environment."""
     project = env_data.get("COMPOSE_PROJECT_NAME", agent_project_name(agent_id))
@@ -395,7 +388,7 @@ def agent_create(args):
         logger.warning(
             f"No {GENERATOR_REPO} checkout at "
             f"{os.path.join(host_src_dir, GENERATOR_REPO)}. "
-            "oci-env agent generate-client will fail until you clone it and "
+            f"oci-env -a {args.agent_id} generate-client will fail until you clone it and "
             "destroy/recreate this agent."
         )
 
@@ -434,48 +427,17 @@ def agent_create(args):
         print(f"  {GENERATOR_REPO}: {generator}")
     for key in sorted(env_overrides.keys()):
         print(f"  {key}={env_overrides[key]}")
-    print(f"Start with: oci-env agent up {args.agent_id}")
-
-
-def agent_up(args):
-    oci_env_path = get_oci_env_path(args.is_verbose)
-    env_path, _ = load_agent_env(oci_env_path, args.agent_id)
-    client = compose_for_agent(args.is_verbose, env_path)
-
-    up_cmd = ["up", "-d"]
-    if args.build:
-        up_cmd.append("--build")
-    rc = client.compose_command(up_cmd, interactive=True)
-    if rc != 0:
-        exit(rc)
-
-    client.poll(args.attempts, args.wait)
-    api = "{}://{}:{}/".format(
-        client.config["API_PROTOCOL"],
-        client.config["API_HOST"],
-        client.config["API_PORT"],
-    )
-    print(f"Agent {args.agent_id} is up at {api}")
-
-
-def agent_down(args):
-    oci_env_path = get_oci_env_path(args.is_verbose)
-    env_path, _ = load_agent_env(oci_env_path, args.agent_id)
-    try:
-        client = compose_for_agent(args.is_verbose, env_path)
-        rc = client.compose_command(["down"], interactive=True)
-    except FileNotFoundError as exc:
-        exit_with_error(f"compose binary unavailable: {exc}")
-    exit(rc)
+    print(f"Start with: oci-env -a {args.agent_id} compose up -d")
+    print(f"Wait for the API: oci-env -a {args.agent_id} poll --attempts 30 --wait 10")
 
 
 def agent_destroy(args):
     oci_env_path = get_oci_env_path(args.is_verbose)
-    env_path, env_data = load_agent_env(oci_env_path, args.agent_id)
+    env_path, _ = load_agent_env(oci_env_path, args.agent_id)
     compiled_dir = agent_compiled_dir(oci_env_path, args.agent_id)
 
     try:
-        client = compose_for_agent(args.is_verbose, env_path)
+        client = Compose(args.is_verbose, env_path)
         rc = client.compose_command(["down", "--volumes"], interactive=True)
         if rc != 0:
             logger.warning(
@@ -514,106 +476,11 @@ def agent_ls(args):
         )
 
 
-def agent_test(args):
-    """
-    Run tests against an agent environment.
-
-    Functional tests execute inside the agent container, so they use that
-    environment's live API (API_PORT/ creds from the agent env file).
-    """
-    oci_env_path = get_oci_env_path(args.is_verbose)
-    env_path, env_data = load_agent_env(oci_env_path, args.agent_id)
-    client = compose_for_agent(args.is_verbose, env_path)
-
-    # Expose connection hints for tooling that reads the process environment.
-    os.environ.setdefault("OCI_AGENT_ID", args.agent_id)
-    os.environ.setdefault("PULP_API_HOST", env_data.get("API_HOST", "localhost"))
-    os.environ.setdefault("PULP_API_PORT", str(env_data.get("API_PORT", "")))
-    os.environ.setdefault(
-        "PULP_API_ROOT",
-        os.environ.get("PULP_API_ROOT", "/pulp/"),
-    )
-    os.environ.setdefault(
-        "DJANGO_SUPERUSER_USERNAME",
-        env_data.get("DJANGO_SUPERUSER_USERNAME", "admin"),
-    )
-    os.environ.setdefault(
-        "DJANGO_SUPERUSER_PASSWORD",
-        env_data.get("DJANGO_SUPERUSER_PASSWORD", "password"),
-    )
-
-    from oci_env.commands import test as run_test
-
-    # Build a namespace compatible with commands.test
-    class _TestArgs:
-        pass
-
-    test_args = _TestArgs()
-    test_args.install_deps = args.install_deps
-    test_args.test = args.test
-    test_args.plugin = args.plugin
-    # Drop a leading "--" separator commonly used before pytest paths.
-    pytest_args = list(args.args or [])
-    if pytest_args and pytest_args[0] == "--":
-        pytest_args = pytest_args[1:]
-    test_args.args = pytest_args
-    test_args.privileged = args.privileged
-    test_args.is_verbose = args.is_verbose
-
-    if not test_args.plugin:
-        # Default to the first DEV_SOURCE_PATH plugin for agent workflows.
-        plugins = [p for p in env_data.get("DEV_SOURCE_PATH", "").split(":") if p]
-        if len(plugins) == 1:
-            test_args.plugin = plugins[0]
-        else:
-            exit_with_error(
-                "Specify -p PLUGIN for agent test when DEV_SOURCE_PATH has multiple plugins"
-            )
-
-    print(
-        f"Running {test_args.test} tests for {test_args.plugin} on agent {args.agent_id} "
-        f"(API {env_data.get('API_PROTOCOL', 'http')}://{env_data.get('API_HOST', 'localhost')}:"
-        f"{env_data.get('API_PORT')})"
-    )
-    run_test(test_args, client)
-
-
-def agent_generate_client(args):
-    oci_env_path = get_oci_env_path(args.is_verbose)
-    env_path, env_data = load_agent_env(oci_env_path, args.agent_id)
-    src_dir = env_data.get("SRC_DIR") or agent_compiled_dir(oci_env_path, args.agent_id)
-    if not agent_has_generator_copy(src_dir):
-        exit_with_error(
-            f"{GENERATOR_REPO} was not copied when agent {args.agent_id} was created. "
-            "Clone github.com/pulp/pulp-openapi-generator into the host source directory, "
-            "then destroy and recreate the agent."
-        )
-
-    client = compose_for_agent(args.is_verbose, env_path)
-
-    from oci_env.commands import generate_client
-
-    class _Args:
-        pass
-
-    gargs = _Args()
-    gargs.plugin = args.plugin
-    gargs.language = args.language
-    gargs.install_client = args.install_client
-    gargs.is_verbose = args.is_verbose
-    gargs.api_version = getattr(args, "api_version", "v3")
-    generate_client(gargs, client)
-
-
 def agent_dispatch(args):
     actions = {
         "create": agent_create,
-        "up": agent_up,
-        "down": agent_down,
         "destroy": agent_destroy,
         "ls": agent_ls,
-        "test": agent_test,
-        "generate-client": agent_generate_client,
     }
     action = getattr(args, "agent_action", None)
     if action not in actions:

@@ -87,6 +87,9 @@ jobs:
         run: |
           pip install -e oci_env/client/
 
+      - name: Test client CLI
+        run: python -m unittest discover -s oci_env/client/tests -v
+
       - name: Build and run the environment
         run: |
           oci-env compose build

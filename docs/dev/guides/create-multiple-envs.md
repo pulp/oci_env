@@ -3,8 +3,9 @@
 You can running multiple environments simultaneously.
 
 For parallel coding agents that need lean, short-lived stacks with automatic port allocation and
-git worktrees, prefer [`oci-env agent`](agent-envs.md) with the `lean` profile instead of
-hand-writing env files.
+git worktrees, use [`oci-env agent create`](agent-envs.md) with the `lean` profile instead of
+hand-writing env files. Select an allocated environment with `-a AGENT_ID` before the
+command, for example `oci-env -a pr-123 compose up -d`. `-a` and `-e` are mutually exclusive.
 
 ## Create an `.env` file
 
