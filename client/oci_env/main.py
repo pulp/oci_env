@@ -1,22 +1,22 @@
 import argparse
 import os
 
+from oci_env.agent import agent_dispatch, load_agent_env
 from oci_env.commands import (
     compose,
-    exec,
     db,
+    exec,
+    generate_client,
+    phelper,
+    poll,
+    profile,
+    pulpcore_manager,
     shell,
     test,
-    generate_client,
-    pulpcore_manager,
-    profile,
-    poll,
-    phelper
 )
-
-from oci_env.agent import agent_dispatch
 from oci_env.utils import (
-    Compose
+    Compose,
+    get_oci_env_path,
 )
 
 
@@ -42,7 +42,9 @@ def get_env_bool(key, default=False):
 def get_parser():
     parser = argparse.ArgumentParser(description='Pulp OCI image developer environment.')
     parser.add_argument('-v', action='store_true', dest='is_verbose', default=get_env_bool("OCI_VERBOSE"), help="Print extra debug information.")
-    parser.add_argument('-e', type=str, default="", dest='env_file', help="Specify an environment file to use other than the default.")
+    target = parser.add_mutually_exclusive_group()
+    target.add_argument('-e', type=str, default="", dest='env_file', help="Specify an environment file to use other than the default.")
+    target.add_argument('-a', '--agent', dest='target_agent', metavar='AGENT_ID', help="Run the command against an existing agent environment.")
 
     subparsers = parser.add_subparsers()
 
@@ -104,7 +106,7 @@ def parse_test_command(subparsers):
     parser = subparsers.add_parser('test', help='Run tests and install requirements.')
     parser.add_argument('test', choices=["functional", "unit", "lint", "performance"])
     parser.add_argument('-i', action='store_true', dest='install_deps', help="Deprecated no-op. Test dependencies are always installed.")
-    parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test. Tests won't run unless this is specified.")
+    parser.add_argument('-p', type=str, default="", dest='plugin', help="Plugin to test; place before the suite. Defaults to the sole source plugin in an agent environment.")
     parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to pytest. Use -k/-m to select tests (file paths are not supported with --pyargs).')
     parser.add_argument("--privileged", action="store_true", dest="privileged")
     parser.set_defaults(func=test)
@@ -206,82 +208,12 @@ def parse_agent_command(subparsers):
     )
     create.set_defaults(func=agent_dispatch, agent_action="create")
 
-    up = agent_sub.add_parser("up", help="Start an agent environment and wait for the API.")
-    up.add_argument("agent_id", help="Agent id to start.")
-    up.add_argument("--build", action="store_true", help="Build images before starting.")
-    up.add_argument("--attempts", type=int, default=30, help="Poll attempts for API readiness.")
-    up.add_argument("--wait", type=int, default=10, help="Seconds between poll attempts.")
-    up.set_defaults(func=agent_dispatch, agent_action="up")
-
-    down = agent_sub.add_parser("down", help="Stop an agent environment (keeps volumes).")
-    down.add_argument("agent_id", help="Agent id to stop.")
-    down.set_defaults(func=agent_dispatch, agent_action="down")
+    ls = agent_sub.add_parser("ls", help="List agent environments.")
+    ls.set_defaults(func=agent_dispatch, agent_action="ls")
 
     destroy = agent_sub.add_parser("destroy", help="Stop an agent environment and remove volumes/env.")
     destroy.add_argument("agent_id", help="Agent id to destroy.")
     destroy.set_defaults(func=agent_dispatch, agent_action="destroy")
-
-    ls = agent_sub.add_parser("ls", help="List agent environments.")
-    ls.set_defaults(func=agent_dispatch, agent_action="ls")
-
-    test_cmd = agent_sub.add_parser("test", help="Run tests against an agent environment's live API.")
-    test_cmd.add_argument("agent_id", help="Agent id to test.")
-    test_cmd.add_argument(
-        "test",
-        nargs="?",
-        default="functional",
-        choices=["functional", "unit", "lint", "performance"],
-        help="Test suite (default: functional).",
-    )
-    test_cmd.add_argument(
-        "-i",
-        action="store_true",
-        dest="install_deps",
-        help="Deprecated no-op. Test dependencies are always installed.",
-    )
-    test_cmd.add_argument(
-        "-p",
-        type=str,
-        default="",
-        dest="plugin",
-        help="Plugin to test (defaults to the sole DEV_SOURCE_PATH plugin).",
-    )
-    test_cmd.add_argument("args", nargs=argparse.REMAINDER, help="Arguments to pass to pytest.")
-    test_cmd.add_argument("--privileged", action="store_true", dest="privileged")
-    test_cmd.set_defaults(func=agent_dispatch, agent_action="test")
-
-    gen = agent_sub.add_parser(
-        "generate-client",
-        help="Generate (and optionally install) API clients for an agent environment.",
-    )
-    gen.add_argument("agent_id", help="Agent id.")
-    gen.add_argument(
-        "plugin",
-        nargs="?",
-        default=None,
-        help="Plugin to generate a client for (default: all in DEV_SOURCE_PATH).",
-    )
-    gen.add_argument(
-        "-l",
-        "--language",
-        default="python",
-        choices=["python", "ruby"],
-        help="Client language.",
-    )
-    gen.add_argument(
-        "-i",
-        action="store_true",
-        dest="install_client",
-        help="Deprecated no-op. Clients are always installed into the agent container.",
-    )
-    gen.add_argument(
-        "--api-version",
-        default="v3",
-        choices=["v3", "v4"],
-        dest="api_version",
-        help="API version to generate the clients for (default: v3).",
-    )
-    gen.set_defaults(func=agent_dispatch, agent_action="generate-client")
 
 
 def main():
@@ -292,8 +224,10 @@ def main():
         parser.print_help()
         exit()
 
-    # Agent create/ls manage env files themselves and must not require compose.env.
+    # Agent management handles its own env files and must not require compose.env.
     if getattr(args, "func", None) is agent_dispatch:
+        if args.target_agent is not None or args.env_file:
+            parser.error("-a/--agent and -e select a target for operational commands, not agent management")
         try:
             args.func(args)
         except KeyboardInterrupt:
@@ -301,7 +235,11 @@ def main():
             exit(1)
         return
 
-    client = Compose(args.is_verbose, args.env_file)
+    env_file = args.env_file
+    if args.target_agent is not None:
+        env_file, _ = load_agent_env(get_oci_env_path(args.is_verbose), args.target_agent)
+
+    client = Compose(args.is_verbose, env_file)
     try:
         args.func(args, client)
     except KeyboardInterrupt:

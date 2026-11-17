@@ -21,12 +21,15 @@ API_PORT=5101
 COMPOSE_PROJECT_NAME=agent_example
 ```
 
-Prefer the `oci-env agent` commands to allocate ports/project names and manage lifecycle:
+Use `oci-env agent` to allocate ports/project names, then select the environment with `-a`:
 
 ```bash
 oci-env agent create example --plugins pulpcore
-oci-env agent up example
-oci-env agent test example -p pulpcore functional -k test_crud_repos
+oci-env -a example compose up -d
+oci-env -a example poll --attempts 30 --wait 10
+oci-env -a example generate-client pulpcore
+oci-env -a example generate-client pulp_file
+oci-env -a example test -p pulpcore functional -- -k test_crud_repos
 oci-env agent destroy example
 ```
 
@@ -36,6 +39,11 @@ When the code already lives in an AI tool worktree (Cursor `/worktree`, etc.), p
 oci-env agent create example \
   --plugins pulpcore=/path/to/external/worktree
 ```
+
+`-a` also selects the agent for logs, shells, and service restarts, for example
+`oci-env -a example compose logs pulp` and `oci-env -a example prestart`.
+Use `oci-env -a example compose down` to stop the stack while keeping its volumes and
+configuration. `agent destroy` removes them. `agent ls` lists allocated environments.
 
 ## Extra variables
 
